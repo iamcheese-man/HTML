@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Live ISS Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap');
+
+    body {
+      font-family: 'Roboto Mono', monospace, system-ui, sans-serif;
+      background: linear-gradient(135deg, #0a0a1f 0%, #001f3f 100%);
+      color: #00ffe5;
+      text-align: center;
+      padding: 3rem 1rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      user-select: none;
+    }
+
+    h1 {
+      font-weight: 700;
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      text-shadow: 0 0 10px #00ffe5aa;
+    }
+
+    .tracker-card {
+      background: rgba(0, 255, 229, 0.1);
+      border: 2px solid #00ffe5;
+      border-radius: 16px;
+      max-width: 360px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+      box-shadow: 0 0 15px #00ffe5aa;
+      transition: box-shadow 0.3s ease;
+    }
+
+    .tracker-card:hover {
+      box-shadow: 0 0 30px #00ffe5ee;
+    }
+
+    .latlon {
+      font-size: 2rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+      color: #00fff9;
+    }
+
+    .info {
+      font-size: 1.2rem;
+      color: #88f7f5cc;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      margin-bottom: 0;
+    }
+
+    .status {
+      margin-top: 1.5rem;
+      font-size: 0.85rem;
+      color: #008080bb;
+      font-style: italic;
+      letter-spacing: 0.05em;
+      user-select: text;
+    }
+
+    @media (max-width: 400px) {
+      h1 {
+        font-size: 2.25rem;
+      }
+
+      .latlon {
+        font-size: 1.5rem;
+      }
+
+      .info {
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>🛰️ ISS Live Tracker</h1>
+  <div class="tracker-card">
+    <div class="latlon">Waiting for data...</div>
+    <div class="info"></div>
+    <div class="status">Updating every 0.5 seconds</div>
+  </div>
+
+  <script>
+    async function fetchISS() {
+      try {
+        const res = await fetch("https://api.wheretheiss.at/v1/satellites/25544");
+        const data = await res.json();
+        const lat = data.latitude.toFixed(5);
+        const lon = data.longitude.toFixed(5);
+        const alt = data.altitude.toFixed(2);
+        const vel = data.velocity.toFixed(2);
+
+        document.querySelector(".latlon").textContent = `Lat: ${lat}°, Lon: ${lon}°`;
+        document.querySelector(".info").textContent = `Altitude: ${alt} km | Velocity: ${vel} km/h`;
+      } catch {
+        document.querySelector(".latlon").textContent = "API error / rate limit.";
+        document.querySelector(".info").textContent = "";
+      }
+    }
+
+    setInterval(fetchISS, 1000);
+  </script>
+</body>
+</html>
