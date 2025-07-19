@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Firebase Chat with Nickname Login</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #4c6ef5, #15aabf);
+    color: #f0f2f5;
+    margin: 0; padding: 0;
+    display: flex; flex-direction: column; min-height: 100vh;
+  }
+  header {
+    padding: 1.2rem 1rem;
+    text-align: center;
+    font-size: 2.2rem;
+    font-weight: 700;
+    background: rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    letter-spacing: 0.05em;
+    user-select: none;
+  }
+  #auth-container, #chat-container {
+    max-width: 460px;
+    margin: 2rem auto 3rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 2rem 2.5rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  label {
+    display: block;
+    margin: 1rem 0 0.4rem 0;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  input[type="text"], input[type="email"], input[type="password"] {
+    width: 100%;
+    padding: 0.7rem 1rem;
+    border-radius: 12px;
+    border: none;
+    font-size: 1.1rem;
+    background: rgba(255, 255, 255, 0.15);
+    color: #e9ecef;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.2);
+    transition: background-color 0.3s ease;
+  }
+  input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.3);
+    box-shadow: inset 0 2px 8px #4c6ef5;
+  }
+  button {
+    margin-top: 1.5rem;
+    width: 100%;
+    padding: 0.8rem 0;
+    border-radius: 16px;
+    border: none;
+    background: linear-gradient(90deg, #22b8cf, #4c6ef5);
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.2rem;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(72, 114, 255, 0.6);
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+    user-select: none;
+  }
+  button:hover:not(:disabled) {
+    background: linear-gradient(90deg, #4c6ef5, #22b8cf);
+    box-shadow: 0 6px 18px rgba(72, 114, 255, 0.85);
+  }
+  button:disabled {
+    background: #1e293b;
+    cursor: not-allowed;
+    box-shadow: none;
+    color: #94a3b8;
+  }
+  #toggle-auth {
+    margin-top: 1rem;
+    background: transparent;
+    color: #a5b4fc;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    border: none;
+    text-decoration: underline;
+    user-select: none;
+  }
+  #toggle-auth:hover {
+    color: #d0ebff;
+  }
+  #chat-messages {
+    height: 300px;
+    overflow-y: auto;
+    background: rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 1.3rem 1.5rem;
+    font-size: 1.05rem;
+    margin-bottom: 1.3rem;
+    color: #e0e7ff;
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.3);
+  }
+  .message {
+    margin-bottom: 0.9rem;
+    line-height: 1.3;
+  }
+  .message strong {
+    color: #74c0fc;
+  }
+  #chat-input {
+    display: flex;
+    gap: 0.7rem;
+  }
+  #chat-input input {
+    flex-grow: 1;
+    padding: 0.7rem 1rem;
+    border-radius: 12px;
+    border: none;
+    font-size: 1.1rem;
+    background: rgba(255, 255, 255, 0.15);
+    color: #e9ecef;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.25);
+    transition: background-color 0.3s ease;
+  }
+  #chat-input input:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.3);
+    box-shadow: inset 0 2px 8px #4c6ef5;
+  }
+  #send-btn {
+    padding: 0 1.3rem;
+    border-radius: 16px;
+    background: #22b8cf;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(34, 184, 207, 0.7);
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+    user-select: none;
+  }
+  #send-btn:hover:not(:disabled) {
+    background: #15aabf;
+    box-shadow: 0 6px 14px rgba(21, 170, 191, 0.85);
+  }
+  #send-btn:disabled {
+    background: #1e293b;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+  #logout-btn {
+    margin-top: 1.3rem;
+    background: #ff6b6b;
+    color: white;
+    font-weight: 700;
+    font-size: 1.1rem;
+    border-radius: 16px;
+    border: none;
+    cursor: pointer;
+    user-select: none;
+    box-shadow: 0 4px 14px rgba(255, 107, 107, 0.8);
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+  }
+  #logout-btn:hover {
+    background: #ff4c4c;
+    box-shadow: 0 6px 20px rgba(255, 76, 76, 1);
+  }
+</style>
+</head>
+<body>
+<header>Firebase Chat with Nickname Login</header>
+
+<div id="auth-container">
+  <label for="nickname-input" id="nickname-label">Nickname</label>
+  <input type="text" id="nickname-input" placeholder="Your nickname" autocomplete="off" />
+  
+  <label for="email-input">Email</label>
+  <input type="email" id="email-input" placeholder="Email" autocomplete="off" />
+  
+  <label for="password-input">Password</label>
+  <input type="password" id="password-input" placeholder="Password" autocomplete="off" />
+  
+  <button id="auth-btn">Sign Up</button>
+  <button id="toggle-auth">Switch to Login</button>
+</div>
+
+<div id="chat-container" style="display:none;">
+  <div id="chat-messages"></div>
+  <div id="chat-input">
+    <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off" />
+    <button id="send-btn">Send</button>
+  </div>
+  <button id="logout-btn">Logout</button>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+  import { getDatabase, ref, push, onChildAdded, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAOp2Gr7PaOHgY3HUMU1eKm7VMZAmIG-UY",
+    authDomain: "chatting-4d46f.firebaseapp.com",
+    projectId: "chatting-4d46f",
+    storageBucket: "chatting-4d46f.firebasestorage.app",
+    messagingSenderId: "128861079609",
+    appId: "1:128861079609:web:da9cb3933b7588246565e8",
+    measurementId: "G-XZ7H22MQ3H"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+
+  const authContainer = document.getElementById('auth-container');
+  const chatContainer = document.getElementById('chat-container');
+  const nicknameInput = document.getElementById('nickname-input');
+  const emailInput = document.getElementById('email-input');
+  const passwordInput = document.getElementById('password-input');
+  const authBtn = document.getElementById('auth-btn');
+  const toggleAuthBtn = document.getElementById('toggle-auth');
+  const chatMessages = document.getElementById('chat-messages');
+  const messageInput = document.getElementById('message-input');
+  const sendBtn = document.getElementById('send-btn');
+  const logoutBtn = document.getElementById('logout-btn');
+
+  let isLoginMode = false; // false = signup, true = login
+
+  function setLoading(isLoading) {
+    authBtn.disabled = isLoading;
+    toggleAuthBtn.disabled = isLoading;
+    sendBtn.disabled = isLoading;
+    logoutBtn.disabled = isLoading;
+  }
+
+  toggleAuthBtn.onclick = () => {
+    isLoginMode = !isLoginMode;
+    if (isLoginMode) {
+      authBtn.textContent = 'Login';
+      toggleAuthBtn.textContent = 'Switch to Sign Up';
+      nicknameInput.style.display = 'none';
+    } else {
+      authBtn.textContent = 'Sign Up';
+      toggleAuthBtn.textContent = 'Switch to Login';
+      nicknameInput.style.display = 'block';
+    }
+  };
+
+  authBtn.onclick = async () => {
+    setLoading(true);
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+    const nickname = nicknameInput.value.trim();
+
+    if (!email || !password || (!isLoginMode && !nickname)) {
+      alert('Please fill all required fields.');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      if (isLoginMode) {
+        await signInWithEmailAndPassword(auth, email, password);
+      } else {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        await updateProfile(userCredential.user, { displayName: nickname });
+      }
+    } catch (error) {
+      alert(error.message);
+      console.error(error);
+    }
+    setLoading(false);
+  };
+
+  logoutBtn.onclick = async () => {
+    setLoading(true);
+    try {
+      await signOut(auth);
+    } catch (e) {
+      console.error(e);
+    }
+    setLoading(false);
+  };
+
+  onAuthStateChanged(auth, user => {
+    if (user) {
+      authContainer.style.display = 'none';
+      chatContainer.style.display = 'block';
+      chatMessages.innerHTML = '';
+      listenForMessages();
+    } else {
+      authContainer.style.display = 'block';
+      chatContainer.style.display = 'none';
+    }
+  });
+
+  sendBtn.onclick = async () => {
+    const msg = messageInput.value.trim();
+    if (!msg) return;
+
+    setLoading(true);
+
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error('Not logged in');
+
+      const messagesRef = ref(db, 'messages');
+      await push(messagesRef, {
+        text: msg,
+        sender: user.displayName || 'Anonymous',
+        timestamp: serverTimestamp()
+      });
+
+      messageInput.value = '';
+    } catch (e) {
+      alert('Error sending message: ' + e.message);
+      console.error(e);
+    }
+
+    setLoading(false);
+  };
+
+  function listenForMessages() {
+    const messagesRef = ref(db, 'messages');
+    onChildAdded(messagesRef, snapshot => {
+      const msg = snapshot.val();
+      const time = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString() : '';
+      const div = document.createElement('div');
+      div.classList.add('message');
+      div.innerHTML = `<strong>${escapeHtml(msg.sender)}</strong> [${time}]: ${escapeHtml(msg.text)}`;
+      chatMessages.appendChild(div);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    });
+  }
+
+  // Simple escape function to prevent HTML injection
+  function escapeHtml(text) {
+    return text.replace(/[&<>"']/g, (match) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    })[match]);
+  }
+</script>
+
+</body>
+</html>
