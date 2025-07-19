@@ -96,6 +96,11 @@
     background: #ff3b3b;
     color: white;
   }
+  #clear-chat-btn {
+    background: #ffaa00;
+    color: #000;
+    margin-top: 0.5rem;
+  }
 </style>
 </head>
 <body>
@@ -121,6 +126,7 @@
     <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off" />
     <button id="send-btn">Send</button>
   </div>
+  <button id="clear-chat-btn">Clear Chat (Client)</button>
   <button id="logout-btn">Logout</button>
 </div>
 
@@ -168,6 +174,7 @@
   const messageInput = document.getElementById('message-input');
   const sendBtn = document.getElementById('send-btn');
   const logoutBtn = document.getElementById('logout-btn');
+  const clearChatBtn = document.getElementById('clear-chat-btn');
 
   let isLoginMode = false; // false = signup, true = login
 
@@ -176,6 +183,7 @@
     toggleAuthBtn.disabled = isLoading;
     sendBtn.disabled = isLoading;
     logoutBtn.disabled = isLoading;
+    clearChatBtn.disabled = isLoading;
   }
 
   toggleAuthBtn.onclick = () => {
@@ -228,6 +236,10 @@
       console.error(e);
     }
     setLoading(false);
+  };
+
+  clearChatBtn.onclick = () => {
+    chatMessages.innerHTML = '';
   };
 
   onAuthStateChanged(auth, async user => {
