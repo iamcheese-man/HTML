@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Tetris</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #111;
+    color: white;
+    font-family: sans-serif;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: start;
+    touch-action: manipulation;
+  }
+
+  #gameContainer {
+    border: 6px solid #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    width: 90vw;
+    max-width: 600px;
+    aspect-ratio: 6 / 14;
+    margin-top: 20px;
+  }
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  #score {
+    margin-top: 12px;
+    font-size: 22px;
+    font-weight: bold;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 6px 16px;
+    border-radius: 8px;
+  }
+
+  #controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px;
+    margin: 20px 0;
+  }
+
+  button {
+    padding: 25px 30px;
+    font-size: 28px;
+    border-radius: 12px;
+    border: none;
+    background-color: #333;
+    color: white;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.5);
+    transition: transform 0.1s ease;
+  }
+
+  button:active {
+    transform: scale(0.95);
+    background-color: #555;
+  }
+
+  #resetBtn {
+    margin-bottom: 12px;
+    padding: 10px 20px;
+    background: crimson;
+    font-size: 18px;
+    border-radius: 10px;
+  }
+</style>
+</head>
+<body>
+
+<div id="gameContainer">
+  <canvas id="tetris"></canvas>
+</div>
+
+<div id="score">Score: 0</div>
+
+<div id="controls">
+  <button id="left">◀️</button>
+  <button id="rotate">🔁</button>
+  <button id="right">▶️</button>
+  <button id="down">⬇️</button>
+</div>
+
+<button id="resetBtn">Reset Score</button>
+
+<script>
+const canvas = document.getElementById('tetris');
+const context = canvas.getContext('2d');
+const scoreDisplay = document.getElementById('score');
+
+// COOKIE UTILS
+function setCookie(name, value, days = 3650) {
+  const expires = new Date(Date.now() + days*864e5).toUTCString();
+  document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/';
+}
+function getCookie(name) {
+  return document.cookie.split('; ').reduce((r, v) => {
+    const parts = v.split('=');
+    return parts[0] === name ? decodeURIComponent(parts[1]) : r;
+  }, null);
+}
+function deleteCookie(name) {
+  document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+}
+
+function resizeCanvas() {
+  const scale = 20;
+  canvas.width = 12 * scale;
+  canvas.height = 20 * scale;
+  context.setTransform(1, 0, 0, 1, 0, 0);
+  context.scale(scale, scale);
+}
+resizeCanvas();
+
+function createMatrix(w, h) {
+  const matrix = [];
+  while (h--) matrix.push(new Array(w).fill(0));
+  return matrix;
+}
+
+function drawMatrix(matrix, offset) {
+  matrix.forEach((row, y) =>
+    row.forEach((value, x) => {
+      if (value !== 0) {
+        context.fillStyle = colors[value];
+        context.fillRect(x + offset.x, y + offset.y, 1, 1);
+      }
+    }));
+}
+
+function draw() {
+  context.fillStyle = '#000';
+  context.fillRect(0, 0, canvas.width / 20, canvas.height / 20);
+  drawMatrix(arena, {x:0, y:0});
+  drawMatrix(player.matrix, player.pos);
+}
+
+function merge(arena, player) {
+  player.matrix.forEach((row, y) =>
+    row.forEach((value, x) => {
+      if (value !== 0) {
+        arena[y + player.pos.y][x + player.pos.x] = value;
+      }
+    }));
+}
+
+function updateScore() {
+  scoreDisplay.textContent = `Score: ${player.score}`;
+  setCookie('tetrisScore', player.score);
+}
+
+function playerDrop() {
+  player.pos.y++;
+  if (collide(arena, player)) {
+    player.pos.y--;
+    merge(arena, player);
+    playerReset();
+    arenaSweep();
+    updateScore();
+  }
+  dropCounter = 0;
+}
+
+function hardDrop() {
+  while (!collide(arena, player)) player.pos.y++;
+  player.pos.y--;
+  merge(arena, player);
+  playerReset();
+  arenaSweep();
+  updateScore();
+}
+
+function playerMove(dir) {
+  player.pos.x += dir;
+  if (collide(arena, player)) player.pos.x -= dir;
+}
+
+function playerReset() {
+  const pieces = 'TJLOSZI';
+  player.matrix = createPiece(pieces[Math.floor(Math.random() * pieces.length)]);
+  player.pos.y = 0;
+  player.pos.x = (arena[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
+  if (collide(arena, player)) {
+    arena.forEach(row => row.fill(0));
+    player.score = 0;
+    updateScore();
+  }
+}
+
+function playerRotate(dir) {
+  const pos = player.pos.x;
+  let offset = 1;
+  rotate(player.matrix, dir);
+  while (collide(arena, player)) {
+    player.pos.x += offset;
+    offset = -(offset + (offset > 0 ? 1 : -1));
+    if (offset > player.matrix[0].length) {
+      rotate(player.matrix, -dir);
+      player.pos.x = pos;
+      return;
+    }
+  }
+}
+
+function rotate(matrix, dir) {
+  for (let y = 0; y < matrix.length; ++y) {
+    for (let x = 0; x < y; ++x) {
+      [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
+    }
+  }
+  if (dir > 0) matrix.forEach(row => row.reverse());
+  else matrix.reverse();
+}
+
+function collide(arena, player) {
+  const [m, o] = [player.matrix, player.pos];
+  for (let y = 0; y < m.length; ++y)
+    for (let x = 0; x < m[y].length; ++x)
+      if (m[y][x] !== 0 &&
+         (arena[y + o.y] &&
+          arena[y + o.y][x + o.x]) !== 0) return true;
+  return false;
+}
+
+function arenaSweep() {
+  let rowCount = 1;
+  outer: for (let y = arena.length -1; y >= 0; --y) {
+    for (let x = 0; x < arena[y].length; ++x) {
+      if (arena[y][x] === 0) continue outer;
+    }
+    const row = arena.splice(y, 1)[0].fill(0);
+    arena.unshift(row);
+    ++y;
+    player.score += rowCount * 10;
+    rowCount *= 2;
+  }
+}
+
+function createPiece(type) {
+  if (type === 'T') return [[0,0,0],[1,1,1],[0,1,0]];
+  if (type === 'O') return [[2,2],[2,2]];
+  if (type === 'L') return [[0,3,0],[0,3,0],[0,3,3]];
+  if (type === 'J') return [[0,4,0],[0,4,0],[4,4,0]];
+  if (type === 'I') return [[0,5,0,0],[0,5,0,0],[0,5,0,0],[0,5,0,0]];
+  if (type === 'S') return [[0,6,6],[6,6,0],[0,0,0]];
+  if (type === 'Z') return [[7,7,0],[0,7,7],[0,0,0]];
+}
+
+const colors = [null, '#FF0D72', '#0DC2FF', '#0DFF72', '#F538FF', '#FF8E0D', '#FFE138', '#3877FF'];
+const arena = createMatrix(12, 20);
+const player = {
+  pos: {x:0, y:0},
+  matrix: null,
+  score: parseInt(getCookie('tetrisScore') || 0),
+};
+
+let dropCounter = 0;
+let dropInterval = 1000;
+let lastTime = 0;
+
+function update(time = 0) {
+  const deltaTime = time - lastTime;
+  lastTime = time;
+  dropCounter += deltaTime;
+  if (dropCounter > dropInterval) playerDrop();
+  draw();
+  requestAnimationFrame(update);
+}
+
+playerReset();
+update();
+updateScore();
+
+// Controls
+document.getElementById('left').addEventListener('click', () => playerMove(-1));
+document.getElementById('right').addEventListener('click', () => playerMove(1));
+document.getElementById('rotate').addEventListener('click', () => playerRotate(1));
+document.getElementById('resetBtn').addEventListener('click', () => {
+  player.score = 0;
+  updateScore();
+  alert("Score reset.");
+});
+
+// Fast drop on hold
+let dropHeld = false;
+let dropIntervalId;
+document.getElementById('down').addEventListener('touchstart', () => {
+  dropHeld = true;
+  dropIntervalId = setInterval(() => {
+    if (dropHeld) playerDrop();
+  }, 50);
+}, {passive: true});
+document.getElementById('down').addEventListener('touchend', () => {
+  dropHeld = false;
+  clearInterval(dropIntervalId);
+});
+
+// Keyboard
+document.addEventListener('keydown', event => {
+  if (event.repeat) return;
+  switch(event.key) {
+    case 'ArrowLeft': playerMove(-1); break;
+    case 'ArrowRight': playerMove(1); break;
+    case 'ArrowUp': playerRotate(1); break;
+    case 'ArrowDown': playerDrop(); break;
+    case ' ': hardDrop(); break;
+  }
+});
+</script>
+</body>
+</html>
