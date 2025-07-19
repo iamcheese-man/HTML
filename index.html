@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shortcuts Triggers</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #007AFF 0%, #5856D6 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2rem;
+            margin: 0 0 10px 0;
+            font-weight: 700;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+        
+        .trigger-section {
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .trigger-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+        }
+        
+        .trigger-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.2s ease;
+        }
+        
+        .trigger-card:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.25);
+        }
+        
+        .trigger-card h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .trigger-card p {
+            margin: 0 0 15px 0;
+            opacity: 0.9;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        
+        .trigger-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.2s ease;
+        }
+        
+        .trigger-btn:active {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(0.95);
+        }
+        
+        .status-display {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 0.85rem;
+            min-height: 60px;
+            overflow-y: auto;
+            max-height: 200px;
+        }
+        
+        .result-item {
+            padding: 8px;
+            margin: 5px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            border-left: 3px solid #00FF88;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .info-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .info-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        
+        .url-display {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 0.8rem;
+            word-break: break-all;
+        }
+        
+        @media (max-width: 500px) {
+            .trigger-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 1.7rem;
+            }
+            
+            .info-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Shortcuts Triggers</h1>
+            <p>Optimized for iOS Shortcuts App</p>
+        </div>
+        
+        <div class="trigger-section">
+            <div class="section-title">📱 Device Info</div>
+            <div class="trigger-grid">
+                <div class="trigger-card">
+                    <h3>📊 System Info</h3>
+                    <p>Get device and browser information</p>
+                    <button class="trigger-btn" onclick="getSystemInfo()">Get System Info</button>
+                </div>
+                
+                <div class="trigger-card">
+                    <h3>🌐 Network Info</h3>
+                    <p>Check connection and IP details</p>
+                    <button class="trigger-btn" onclick="getNetworkInfo()">Check Network</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="trigger-section">
+            <div class="section-title">🔗 URL Generators</div>
+            <div class="trigger-grid">
+                <div class="trigger-card">
+                    <h3>📞 Phone Call</h3>
+                    <p>Generate phone call URL</p>
+                    <button class="trigger-btn" onclick="generatePhoneURL()">Create Call Link</button>
+                </div>
+                
+                <div class="trigger-card">
+                    <h3>💬 SMS</h3>
+                    <p>Generate text message URL</p>
+                    <button class="trigger-btn" onclick="generateSMSURL()">Create SMS Link</button>
+                </div>
+                
+                <div class="trigger-card">
+                    <h3>📧 Email</h3>
+                    <p>Generate email URL</p>
+                    <button class="trigger-btn" onclick="generateEmailURL()">Create Email Link</button>
+                </div>
+                
+                <div class="trigger-card">
+                    <h3>🗺️ Maps</h3>
+                    <p>Generate map location URL</p>
+                    <button class="trigger-btn" onclick="generateMapsURL()">Create Map Link</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="trigger-section">
+            <div class="section-title">⏰ Time & Date</div>
+            <div class="trigger-grid">
+                <div class="trigger-card">
+                    <h3>🕐 Current Time</h3>
+                    <p>Show current time in multiple formats</p>
+                    <button class="trigger-btn" onclick="showCurrentTime()">Show Time</button>
+                </div>
+                
+                <div class="trigger-card">
+                    <h3>📅 Date Calculator</h3>
+                    <p>Calculate dates and time differences</p>
+                    <button class="trigger-btn" onclick="calculateDates()">Calculate Dates</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="trigger-section">
+            <div class="section-title">🧮 Utilities</div>
+            <div class="trigger-grid">
+                <div class="trigger-card">
+                    <h3>🎲 Random Generator</h3>
+                    <p>Generate random numbers and choices</p>
+                    <button class="trigger-btn" onclick="generateRandom()">Generate Random</button>
+                </div>
+                
+                <div class="trigger-card">
+                    <h3>🔑 Password Generator</h3>
+                    <p>Create secure passwords</p>
+                    <button class="trigger-btn" onclick="generatePassword()">Generate Password</button>
+                </div>
+                
+                <div class="trigger-card">
+                    <h3>📝 Text Tools</h3>
+                    <p>Text manipulation utilities</p>
+                    <button class="trigger-btn" onclick="textTools()">Text Tools</button>
+                </div>
+                
+                <div class="trigger-card">
+                    <h3>🏷️ QR Code Data</h3>
+                    <p>Generate QR code URL</p>
+                    <button class="trigger-btn" onclick="generateQRCode()">Create QR URL</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="trigger-section">
+            <div class="section-title">💾 Data Storage</div>
+            <div class="trigger-grid">
+                <div class="trigger-card">
+                    <h3>💾 Save Data</h3>
+                    <p>Store data locally</p>
+                    <button class="trigger-btn" onclick="saveData()">Save to Storage</button>
+                </div>
+                
+                <div class="trigger-card">
+                    <h3>📂 Load Data</h3>
+                    <p>Retrieve stored data</p>
+                    <button class="trigger-btn" onclick="loadData()">Load from Storage</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="info-grid">
+            <div class="info-card">
+                <div class="info-label">Device</div>
+                <div class="info-value" id="deviceType">Unknown</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">Time</div>
+                <div class="info-value" id="currentTime">--:--</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">Screen</div>
+                <div class="info-value" id="screenInfo">Unknown</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">Status</div>
+                <div class="info-value" id="status">Ready</div>
+            </div>
+        </div>
+        
+        <div class="status-display" id="results">
+            <div class="result-item">System ready - Shortcuts-compatible functions loaded</div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let actionCount = 0;
+        
+        // Utility functions
+        function addResult(message, type = 'success') {
+            const results = document.getElementById('results');
+            const item = document.createElement('div');
+            item.className = 'result-item';
+            item.innerHTML = `${new Date().toLocaleTimeString()} - ${message}`;
+            results.appendChild(item);
+            results.scrollTop = results.scrollHeight;
+            
+            actionCount++;
+            document.getElementById('status').textContent = `Action ${actionCount}`;
+        }
+        
+        function copyToClipboard(text) {
+            // Create a temporary textarea
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            return true;
+        }
+        
+        // Device info functions
+        function getSystemInfo() {
+            const info = {
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                language: navigator.language,
+                cookieEnabled: navigator.cookieEnabled,
+                onLine: navigator.onLine,
+                screenWidth: screen.width,
+                screenHeight: screen.height,
+                colorDepth: screen.colorDepth,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                memory: navigator.deviceMemory || 'Unknown',
+                cores: navigator.hardwareConcurrency || 'Unknown'
+            };
+            
+            let result = 'System Information:\\n';
+            for (const [key, value] of Object.entries(info)) {
+                result += `${key}: ${value}\\n`;
+            }
+            
+            addResult('System info collected');
+            addResult(result);
+        }
+        
+        function getNetworkInfo() {
+            const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            
+            let networkInfo = 'Network Information:\\n';
+            networkInfo += `Online: ${navigator.onLine}\\n`;
+            
+            if (connection) {
+                networkInfo += `Connection Type: ${connection.effectiveType || connection.type || 'Unknown'}\\n`;
+                networkInfo += `Downlink: ${connection.downlink || 'Unknown'} Mbps\\n`;
+                networkInfo += `RTT: ${connection.rtt || 'Unknown'} ms\\n`;
+                networkInfo += `Save Data: ${connection.saveData || false}\\n`;
+            }
+            
+            // Try to get IP info (won't work in Shortcuts but good fallback)
+            networkInfo += `Current URL: ${window.location.href}\\n`;
+            networkInfo += `Referrer: ${document.referrer || 'None'}\\n`;
+            
+            addResult('Network info collected');
+            addResult(networkInfo);
+        }
+        
+        // URL generators
+        function generatePhoneURL() {
+            const number = prompt('Enter phone number:') || '+1234567890';
+            const phoneURL = `tel:${number}`;
+            
+            addResult(`Phone URL: ${phoneURL}`);
+            
+            // Try to copy to clipboard
+            try {
+                copyToClipboard(phoneURL);
+                addResult('Phone URL copied to clipboard');
+            } catch (e) {
+                addResult('Copy failed - URL displayed above');
+            }
+            
+            // Show clickable link
+            const results = document.getElementById('results');
+            const linkDiv = document.createElement('div');
+            linkDiv.className = 'url-display';
+            linkDiv.innerHTML = `<a href="${phoneURL}" style="color: #00FF88; text-decoration: none;">${phoneURL}</a>`;
+            results.appendChild(linkDiv);
+        }
+        
+        function generateSMSURL() {
+            const number = prompt('Enter phone number:') || '+1234567890';
+            const message = prompt('Enter message:') || 'Hello from Shortcuts!';
+            const smsURL = `sms:${number}?body=${encodeURIComponent(message)}`;
+            
+            addResult(`SMS URL: ${smsURL}`);
+            
+            try {
+                copyToClipboard(smsURL);
+                addResult('SMS URL copied to clipboard');
+            } catch (e) {
+                addResult('Copy failed - URL displayed above');
+            }
+            
+            const results = document.getElementById('results');
+            const linkDiv = document.createElement('div');
+            linkDiv.className = 'url-display';
+            linkDiv.innerHTML = `<a href="${smsURL}" style="color: #00FF88; text-decoration: none;">${smsURL}</a>`;
+            results.appendChild(linkDiv);
+        }
+        
+        function generateEmailURL() {
+            const email = prompt('Enter email address:') || 'example@email.com';
+            const subject = prompt('Enter subject:') || 'Message from Shortcuts';
+            const body = prompt('Enter message:') || 'Hello from iOS Shortcuts!';
+            
+            const emailURL = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            
+            addResult(`Email URL: ${emailURL}`);
+            
+            try {
+                copyToClipboard(emailURL);
+                addResult('Email URL copied to clipboard');
+            } catch (e) {
+                addResult('Copy failed - URL displayed above');
+            }
+            
+            const results = document.getElementById('results');
+            const linkDiv = document.createElement('div');
+            linkDiv.className = 'url-display';
+            linkDiv.innerHTML = `<a href="${emailURL}" style="color: #00FF88; text-decoration: none;">${emailURL}</a>`;
+            results.appendChild(linkDiv);
+        }
+        
+        function generateMapsURL() {
+            const location = prompt('Enter location or coordinates:') || 'Apple Park, Cupertino, CA';
+            const mapsURL = `maps://?q=${encodeURIComponent(location)}`;
+            const googleMapsURL = `https://maps.google.com/maps?q=${encodeURIComponent(location)}`;
+            
+            addResult(`Apple Maps URL: ${mapsURL}`);
+            addResult(`Google Maps URL: ${googleMapsURL}`);
+            
+            try {
+                copyToClipboard(mapsURL);
+                addResult('Apple Maps URL copied to clipboard');
+            } catch (e) {
+                addResult('Copy failed - URLs displayed above');
+            }
+            
+            const results = document.getElementById('results');
+            const linkDiv = document.createElement('div');
+            linkDiv.className = 'url-display';
+            linkDiv.innerHTML = `
+                <a href="${mapsURL}" style="color: #00FF88; text-decoration: none; display: block; margin-bottom: 8px;">${mapsURL}</a>
+                <a href="${googleMapsURL}" style="color: #00FF88; text-decoration: none; display: block;">${googleMapsURL}</a>
+            `;
+            results.appendChild(linkDiv);
+        }
+        
+        // Time functions
+        function showCurrentTime() {
+            const now = new Date();
+            
+            const timeInfo = `Current Time Information:\\n` +
+                `Local Time: ${now.toLocaleString()}\\n` +
+                `UTC Time: ${now.toUTCString()}\\n` +
+                `ISO String: ${now.toISOString()}\\n` +
+                `Timestamp: ${now.getTime()}\\n` +
+                `Time Zone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}\\n` +
+                `Day of Week: ${now.toLocaleDateString('en-US', { weekday: 'long' })}\\n` +
+                `Day of Year: ${Math.floor((now - new Date(now.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24))}`;
+            
+            addResult('Current time information collected');
+            addResult(timeInfo);
+        }
+        
+        function calculateDates() {
+            const startDate = prompt('Enter start date (YYYY-MM-DD):') || '2024-01-01';
+            const endDate = prompt('Enter end date (YYYY-MM-DD):') || new Date().toISOString().split('T')[0];
+            
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const diffTime = Math.abs(end - start);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            const diffWeeks = Math.floor(diffDays / 7);
+            const diffMonths = Math.floor(diffDays / 30.44);
+            const diffYears = Math.floor(diffDays / 365.25);
+            
+            const calculation = `Date Calculation:\\n` +
+                `From: ${start.toLocaleDateString()}\\n` +
+                `To: ${end.toLocaleDateString()}\\n` +
+                `Difference: ${diffDays} days\\n` +
+                `That's: ${diffWeeks} weeks, ${diffMonths} months, or ${diffYears} years`;
+            
+            addResult('Date calculation completed');
+            addResult(calculation);
+        }
+        
+        // Utility functions
+        function generateRandom() {
+            const type = prompt('Random type (number/choice/uuid):', 'number');
+            
+            let result = '';
+            
+            switch (type.toLowerCase()) {
+                case 'number':
+                    const min = parseInt(prompt('Minimum number:', '1')) || 1;
+                    const max = parseInt(prompt('Maximum number:', '100')) || 100;
+                    result = `Random number: ${Math.floor(Math.random() * (max - min + 1)) + min}`;
+                    break;
+                    
+                case 'choice':
+                    const choices = prompt('Enter choices (comma separated):', 'Yes,No,Maybe').split(',');
+                    result = `Random choice: ${choices[Math.floor(Math.random() * choices.length)].trim()}`;
+                    break;
+                    
+                case 'uuid':
+                    result = `UUID: ${crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                        const r = Math.random() * 16 | 0;
+                        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                        return v.toString(16);
+                    })}`;
+                    break;
+                    
+                default:
+                    result = `Random number: ${Math.floor(Math.random() * 100) + 1}`;
+            }
+            
+            addResult('Random value generated');
+            addResult(result);
+            
+            try {
+                copyToClipboard(result.split(': ')[1]);
+                addResult('Value copied to clipboard');
+            } catch (e) {
+                addResult('Copy failed - value displayed above');
+            }
+        }
+        
+        function generatePassword() {
+            const length = parseInt(prompt('Password length:', '12')) || 12;
+            const includeSymbols = confirm('Include symbols?');
+            
+            let charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            if (includeSymbols) {
+                charset += '!@#$%^&*()_+-=[]{}|;:,.<>?';
+            }
+            
+            let password = '';
+            for (let i = 0; i < length; i++) {
+                password += charset.charAt(Math.floor(Math.random() * charset.length));
+            }
+            
+            addResult('Password generated');
+            addResult(`Password: ${password}`);
+            
+            try {
+                copyToClipboard(password);
+                addResult('Password copied to clipboard');
+            } catch (e) {
+                addResult('Copy failed - password displayed above');
+            }
+        }
+        
+        function textTools() {
+            const text = prompt('Enter text to manipulate:', 'Hello World');
+            
+            if (!text) return;
+            
+            const results = `Text Tools Results:\\n` +
+                `Original: ${text}\\n` +
+                `Uppercase: ${text.toUpperCase()}\\n` +
+                `Lowercase: ${text.toLowerCase()}\\n` +
+                `Title Case: ${text.replace(/\\w\\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase())}\\n` +
+                `Reverse: ${text.split('').reverse().join('')}\\n` +
+                `Length: ${text.length} characters\\n` +
+                `Words: ${text.split(/\\s+/).length}\\n` +
+                `Base64: ${btoa(text)}`;
+            
+            addResult('Text manipulation completed');
+            addResult(results);
+        }
+        
+        function generateQRCode() {
+            const data = prompt('Enter data for QR code:', 'Hello from Shortcuts!');
+            const qrURL = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data)}`;
+            
+            addResult(`QR Code URL: ${qrURL}`);
+            
+            try {
+                copyToClipboard(qrURL);
+                addResult('QR Code URL copied to clipboard');
+            } catch (e) {
+                addResult('Copy failed - URL displayed above');
+            }
+            
+            const results = document.getElementById('results');
+            const linkDiv = document.createElement('div');
+            linkDiv.className = 'url-display';
+            linkDiv.innerHTML = `<a href="${qrURL}" target="_blank" style="color: #00FF88; text-decoration: none;">${qrURL}</a>`;
+            results.appendChild(linkDiv);
+        }
+        
+        // Storage functions
+        function saveData() {
+            const key = prompt('Enter data key:', 'myData');
+            const value = prompt('Enter data value:', 'Hello from Shortcuts!');
+            
+            try {
+                localStorage.setItem(key, value);
+                addResult(`Data saved: ${key} = ${value}`);
+            } catch (e) {
+                addResult(`Storage failed: ${e.message}`);
+            }
+        }
+        
+        function loadData() {
+            const key = prompt('Enter data key to load:', 'myData');
+            
+            try {
+                const value = localStorage.getItem(key);
+                if (value !== null) {
+                    addResult(`Data loaded: ${key} = ${value}`);
+                    
+                    try {
+                        copyToClipboard(value);
+                        addResult('Value copied to clipboard');
+                    } catch (e) {
+                        addResult('Copy failed - value displayed above');
+                    }
+                } else {
+                    addResult(`No data found for key: ${key}`);
+                }
+            } catch (e) {
+                addResult(`Storage error: ${e.message}`);
+            }
+        }
+        
+        // Initialize
+        function initializeApp() {
+            // Update device info
+            const ua = navigator.userAgent;
+            let device = 'Unknown';
+            if (/iPhone/i.test(ua)) device = 'iPhone';
+            else if (/iPad/i.test(ua)) device = 'iPad';
+            else if (/Android/i.test(ua)) device = 'Android';
+            else if (/Mac/i.test(ua)) device = 'Mac';
+            
+            document.getElementById('deviceType').textContent = device;
+            document.getElementById('screenInfo').textContent = `${screen.width}×${screen.height}`;
+            
+            // Update time every second
+            function updateTime() {
+                document.getElementById('currentTime').textContent = new Date().toLocaleTimeString();
+            }
+            updateTime();
+            setInterval(updateTime, 1000);
+            
+            addResult('App initialized successfully');
+        }
+        
+        // Start the app
+        document.addEventListener('DOMContentLoaded', initializeApp);
+        
+        // Handle page visibility changes
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                addResult('Page became visible');
+            }
+        });
+    </script>
+</body>
+</html>
