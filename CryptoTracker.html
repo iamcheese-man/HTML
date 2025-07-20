@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ultimate Crypto Tracker 🚀</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg-light: #f5f8fa;
+      --bg-dark: #121212;
+      --text-light: #222;
+      --text-dark: #eee;
+      --accent-light: #007bff;
+      --accent-dark: #3399ff;
+      --card-light: #fff;
+      --card-dark: #1e1e1e;
+      --shadow-light: rgba(0,0,0,0.1);
+      --shadow-dark: rgba(0,0,0,0.5);
+    }
+    [data-theme="dark"] {
+      --bg: var(--bg-dark);
+      --text: var(--text-dark);
+      --accent: var(--accent-dark);
+      --card: var(--card-dark);
+      --shadow: var(--shadow-dark);
+    }
+    [data-theme="light"] {
+      --bg: var(--bg-light);
+      --text: var(--text-light);
+      --accent: var(--accent-light);
+      --card: var(--card-light);
+      --shadow: var(--shadow-light);
+    }
+    body {
+      margin: 0; 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1rem 1rem 3rem;
+      transition: background 0.3s, color 0.3s;
+      user-select: none;
+    }
+    h1 {
+      margin-bottom: 0.5rem;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      text-align: center;
+    }
+    .container {
+      width: 100%;
+      max-width: 900px;
+      background: var(--card);
+      border-radius: 16px;
+      box-shadow: 0 6px 18px var(--shadow);
+      padding: 1.5rem 2rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      user-select: text;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: space-between;
+      align-items: center;
+    }
+    select, input[type=search], button {
+      font-size: 1rem;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      border: 1.5px solid var(--accent);
+      color: var(--text);
+      background: transparent;
+      cursor: pointer;
+      min-width: 120px;
+      transition: background 0.3s, color 0.3s;
+    }
+    input[type=search] {
+      flex-grow: 1;
+      border-radius: 8px;
+      border-color: #ccc;
+      color: var(--text);
+    }
+    input[type=search]:focus,
+    select:focus,
+    button:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 6px var(--accent);
+    }
+    button {
+      background: var(--accent);
+      color: var(--card);
+      font-weight: 700;
+      border: none;
+      min-width: 140px;
+      user-select: none;
+      transition: background 0.3s;
+    }
+    button:hover:not(:disabled) {
+      background: var(--accent-dark);
+    }
+    button:disabled {
+      background: #888;
+      cursor: not-allowed;
+    }
+    .info-cards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+    }
+    .info-card {
+      flex: 1 1 130px;
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: 0 4px 8px var(--shadow);
+      text-align: center;
+      user-select: text;
+      transition: background 0.3s, color 0.3s;
+    }
+    .info-card h3 {
+      margin: 0 0 0.5rem;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--accent);
+    }
+    .info-card p {
+      font-weight: 600;
+      font-size: 1.3rem;
+      margin: 0;
+    }
+    .price-up {
+      color: #28a745;
+    }
+    .price-down {
+      color: #dc3545;
+    }
+    #chartContainer {
+      margin-top: 1rem;
+      user-select: none;
+    }
+    #priceChart {
+      width: 100%;
+      height: 360px;
+      border-radius: 12px;
+      background: var(--card);
+      box-shadow: 0 6px 18px var(--shadow);
+      transition: background 0.3s;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 2rem;
+      color: var(--accent);
+      font-weight: 600;
+      font-size: 0.85rem;
+      user-select: none;
+    }
+    .loading {
+      text-align: center;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--accent);
+      user-select: none;
+    }
+    .tooltip {
+      position: absolute;
+      background: var(--card);
+      padding: 4px 8px;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px var(--shadow);
+      pointer-events: none;
+      font-size: 0.85rem;
+      color: var(--text);
+      user-select: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body data-theme="light">
+
+  <h1>🚀 Ultimate Crypto Price Tracker</h1>
+  <div class="container" role="main" aria-label="Crypto Price Tracker Application">
+    <div class="controls" aria-label="Controls to select and search coins">
+      <input type="search" placeholder="Search coin..." aria-label="Search coin" id="searchInput" />
+      <select id="coinSelect" aria-label="Select cryptocurrency"></select>
+      <select id="timeframeSelect" aria-label="Select timeframe for chart">
+        <option value="1">1 Day</option>
+        <option value="7" selected>7 Days</option>
+        <option value="30">1 Month</option>
+        <option value="90">3 Months</option>
+        <option value="365">1 Year</option>
+      </select>
+      <button id="toggleThemeBtn" aria-pressed="false" aria-label="Toggle dark and light theme">Toggle Theme</button>
+      <button id="refreshBtn" aria-label="Refresh data">Refresh 🔄</button>
+      <button id="exportChartBtn" aria-label="Export chart as PNG image">Export Chart</button>
+      <button id="copyPriceBtn" aria-label="Copy current price">Copy Price</button>
+    </div>
+
+    <div class="info-cards" aria-live="polite" aria-atomic="true">
+      <div class="info-card" id="priceCard"><h3>Price (USD)</h3><p>—</p></div>
+      <div class="info-card" id="change24Card"><h3>24h Change</h3><p>—</p></div>
+      <div class="info-card" id="change7dCard"><h3>7d Change</h3><p>—</p></div>
+      <div class="info-card" id="marketCapCard"><h3>Market Cap</h3><p>—</p></div>
+      <div class="info-card" id="volumeCard"><h3>24h Volume</h3><p>—</p></div>
+    </div>
+
+    <div id="chartContainer">
+      <canvas id="priceChart" role="img" aria-label="Price history chart"></canvas>
+    </div>
+    <div class="loading" id="loadingText" aria-live="assertive" style="display:none;">Loading data...</div>
+  </div>
+
+  <footer class="footer">
+    Powered by CoinGecko API &bull; Created by ChatGPT
+  </footer>
+
+  <script>
+    (async () => {
+      'use strict';
+
+      const body = document.body;
+      const coinSelect = document.getElementById('coinSelect');
+      const timeframeSelect = document.getElementById('timeframeSelect');
+      const priceCard = document.getElementById('priceCard').querySelector('p');
+      const change24Card = document.getElementById('change24Card').querySelector('p');
+      const change7dCard = document.getElementById('change7dCard').querySelector('p');
+      const marketCapCard = document.getElementById('marketCapCard').querySelector('p');
+      const volumeCard = document.getElementById('volumeCard').querySelector('p');
+      const loadingText = document.getElementById('loadingText');
+      const searchInput = document.getElementById('searchInput');
+      const toggleThemeBtn = document.getElementById('toggleThemeBtn');
+      const refreshBtn = document.getElementById('refreshBtn');
+      const exportChartBtn = document.getElementById('exportChartBtn');
+      const copyPriceBtn = document.getElementById('copyPriceBtn');
+      const ctx = document.getElementById('priceChart').getContext('2d');
+
+      // State
+      let chart = null;
+      let coins = [];
+      let selectedCoin = null;
+      let selectedDays = 7;
+      let autoRefreshInterval = null;
+
+      // Util formatters
+      const formatUSD = num => {
+        if (num === null || num === undefined) return '—';
+        return num.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
+      };
+      const formatPercent = num => {
+        if (num === null || num === undefined) return '—';
+        return (num > 0 ? '+' : '') + num.toFixed(2) + '%';
+      };
+      const formatLargeNumber = num => {
+        if (num === null || num === undefined) return '—';
+        if (num >= 1e12) return (num / 1e12).toFixed(2) + 'T';
+        if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
+        if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
+        if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
+        return num.toFixed(2);
+      };
+
+      // Load saved theme & coin
+      function loadSettings() {
+        const theme = localStorage.getItem('theme');
+        if (theme) {
+          body.setAttribute('data-theme', theme);
+          toggleThemeBtn.setAttribute('aria-pressed', theme === 'dark');
+          toggleThemeBtn.textContent = theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+        } else {
+          body.setAttribute('data-theme', 'light');
+        }
+        const savedCoin = localStorage.getItem('selectedCoin');
+        if (savedCoin) selectedCoin = savedCoin;
+        const savedDays = localStorage.getItem('selectedDays');
+        if (savedDays) selectedDays = Number(savedDays);
+      }
+
+      // Save settings to localStorage
+      function saveSettings() {
+        localStorage.setItem('theme', body.getAttribute('data-theme'));
+        if(selectedCoin) localStorage.setItem('selectedCoin', selectedCoin);
+        if(selectedDays) localStorage.setItem('selectedDays', selectedDays.toString());
+      }
+
+      // Fetch top coins for dropdown (top 100 by market cap)
+      async function fetchCoinsList() {
+        try {
+          const res = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false');
+          if (!res.ok) throw new Error('Failed to fetch coins list');
+          const data = await res.json();
+          coins = data.map(c => ({
+            id: c.id,
+            symbol: c.symbol.toUpperCase(),
+            name: c.name,
+            thumb: c.image
+          }));
+          populateCoinSelect();
+          if (!selectedCoin && coins.length) selectedCoin = coins[0].id;
+          coinSelect.value = selectedCoin;
+        } catch (e) {
+          alert('Error loading coins: ' + e.message);
+        }
+      }
+
+      // Populate coin dropdown with search filtering
+      function populateCoinSelect() {
+        const filter = searchInput.value.trim().toLowerCase();
+        coinSelect.innerHTML = '';
+        const filtered = coins.filter(c => c.name.toLowerCase().includes(filter) || c.symbol.toLowerCase().includes(filter));
+        filtered.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.id;
+          opt.textContent = `${c.name} (${c.symbol})`;
+          coinSelect.appendChild(opt);
+        });
+      }
+
+      // Fetch price & market data
+      async function fetchPriceData(coinId) {
+        loadingText.style.display = 'block';
+        try {
+          const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coinId}&order=market_cap_desc&sparkline=false`;
+          const res = await fetch(url);
+          if (!res.ok) throw new Error('Failed to fetch price data');
+          const data = await res.json();
+          if (!data.length) throw new Error('No data returned');
+          return data[0];
+        } catch (e) {
+          alert('Error fetching price data: ' + e.message);
+          return null;
+        } finally {
+          loadingText.style.display = 'none';
+        }
+      }
+
+      // Fetch historical price data for chart
+      async function fetchChartData(coinId, days) {
+        loadingText.style.display = 'block';
+        try {
+          const url = `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=usd&days=${days}&interval=hourly`;
+          const res = await fetch(url);
+          if (!res.ok) throw new Error('Failed to fetch chart data');
+          const data = await res.json();
+          return data.prices; // [ [timestamp, price], ... ]
+        } catch (e) {
+          alert('Error fetching chart data: ' + e.message);
+          return null;
+        } finally {
+          loadingText.style.display = 'none';
+        }
+      }
+
+      // Update UI price cards
+      function updateInfoCards(data) {
+        if (!data) return;
+        priceCard.textContent = formatUSD(data.current_price);
+        change24Card.textContent = formatPercent(data.price_change_percentage_24h);
+        change24Card.className = 'price-up';
+        if (data.price_change_percentage_24h < 0) change24Card.className = 'price-down';
+
+        change7dCard.textContent = formatPercent(data.price_change_percentage_7d_in_currency);
+        change7dCard.className = 'price-up';
+        if (data.price_change_percentage_7d_in_currency < 0) change7dCard.className = 'price-down';
+
+        marketCapCard.textContent = formatLargeNumber(data.market_cap);
+        volumeCard.textContent = formatLargeNumber(data.total_volume);
+      }
+
+      // Draw chart with Chart.js
+      function drawChart(prices, coinSymbol) {
+        if (chart) chart.destroy();
+
+        const labels = prices.map(p => {
+          const d = new Date(p[0]);
+          // Format based on timeframe
+          if (selectedDays <= 1) return d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+          if (selectedDays <= 30) return d.toLocaleDateString();
+          return d.toLocaleDateString();
+        });
+
+        const dataSet = prices.map(p => p[1]);
+
+        chart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [{
+              label: `${coinSymbol} Price (USD)`,
+              data: dataSet,
+              borderColor: getComputedStyle(document.body).getPropertyValue('--accent').trim(),
+              backgroundColor: 'rgba(0,123,255,0.2)',
+              fill: true,
+              tension: 0.25,
+              pointRadius: 2,
+              pointHoverRadius: 5,
+              hoverBorderWidth: 2
+            }]
+          },
+          options: {
+            responsive: true,
+            interaction: {mode: 'nearest', intersect: false},
+            plugins: {
+              tooltip: {
+                enabled: true,
+                mode: 'nearest',
+                intersect: false,
+                callbacks: {
+                  label: ctx => `$${ctx.parsed.y.toFixed(2)}`
+                }
+              },
+              legend: {
+                display: true,
+                labels: {color: getComputedStyle(document.body).getPropertyValue('--text').trim()}
+              }
+            },
+            scales: {
+              x: {
+                ticks: {color: getComputedStyle(document.body).getPropertyValue('--text').trim()},
+                grid: {color: getComputedStyle(document.body).getPropertyValue('--text').trim() + '22'}
+              },
+              y: {
+                ticks: {color: getComputedStyle(document.body).getPropertyValue('--text').trim()},
+                grid: {color: getComputedStyle(document.body).getPropertyValue('--text').trim() + '22'}
+              }
+            }
+          }
+        });
+      }
+
+      // Update everything on coin/timeframe change
+      async function updateAll() {
+        if (!selectedCoin) return;
+        loadingText.style.display = 'block';
+
+        // Fetch price & extended info
+        const priceData = await fetchPriceData(selectedCoin);
+
+        // 7d change is NOT in basic API — need to fetch extended data
+        // so fetching one more endpoint for 7d % change
+        let extended7d = null;
+        try {
+          const res = await fetch(`https://api.coingecko.com/api/v3/coins/${selectedCoin}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`);
+          if (res.ok) {
+            const detail = await res.json();
+            extended7d = detail.market_data.price_change_percentage_7d;
+          }
+        } catch {}
+
+        if (priceData && extended7d !== null) {
+          priceData.price_change_percentage_7d_in_currency = extended7d.usd ?? null;
+        }
+
+        updateInfoCards(priceData);
+
+        // Fetch chart data
+        const prices = await fetchChartData(selectedCoin, selectedDays);
+        if (prices) drawChart(priceData.symbol.toUpperCase(), prices);
+
+        loadingText.style.display = 'none';
+      }
+
+      // Event handlers
+      coinSelect.addEventListener('change', e => {
+        selectedCoin = e.target.value;
+        saveSettings();
+        updateAll();
+      });
+      timeframeSelect.addEventListener('change', e => {
+        selectedDays = Number(e.target.value);
+        saveSettings();
+        updateAll();
+      });
+      searchInput.addEventListener('input', () => {
+        populateCoinSelect();
+        coinSelect.value = selectedCoin;
+      });
+      toggleThemeBtn.addEventListener('click', () => {
+        if (body.getAttribute('data-theme') === 'dark') {
+          body.setAttribute('data-theme', 'light');
+          toggleThemeBtn.setAttribute('aria-pressed', 'false');
+          toggleThemeBtn.textContent = 'Switch to Dark Mode';
+        } else {
+          body.setAttribute('data-theme', 'dark');
+          toggleThemeBtn.setAttribute('aria-pressed', 'true');
+          toggleThemeBtn.textContent = 'Switch to Light Mode';
+        }
+        saveSettings();
+      });
+      refreshBtn.addEventListener('click', () => updateAll());
+      exportChartBtn.addEventListener('click', () => {
+        if (!chart) return alert('No chart to export');
+        const link = document.createElement('a');
+        link.download = `${selectedCoin}_chart.png`;
+        link.href = chart.toBase64Image();
+        link.click();
+      });
+      copyPriceBtn.addEventListener('click', () => {
+        if (!priceCard.textContent || priceCard.textContent === '—') return alert('No price to copy');
+        navigator.clipboard.writeText(priceCard.textContent).then(() => {
+          alert('Price copied to clipboard!');
+        }, () => {
+          alert('Failed to copy price');
+        });
+      });
+
+      // Init
+      loadSettings();
+      await fetchCoinsList();
+      coinSelect.value = selectedCoin;
+      timeframeSelect.value = selectedDays;
+      updateAll();
+
+      // Auto-refresh every 30 seconds
+      if(autoRefreshInterval) clearInterval(autoRefreshInterval);
+      autoRefreshInterval = setInterval(updateAll, 30000);
+
+    })();
+  </script>
+</body>
+</html>
