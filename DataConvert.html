@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Converter</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 15px;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .header h1 {
+            font-size: 1.8rem;
+            margin: 0 0 5px 0;
+            font-weight: 700;
+            color: #8B4513;
+        }
+        
+        .converter-section {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #8B4513;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .converter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 8px;
+        }
+        
+        .converter-btn {
+            background: #ff6b6b;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 8px;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .converter-btn:active {
+            transform: scale(0.95);
+            background: #ff5252;
+        }
+        
+        .input-output {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .input-box, .output-box {
+            min-height: 80px;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 0.85rem;
+        }
+        
+        .input-box {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            resize: vertical;
+        }
+        
+        .output-box {
+            background: #e9ecef;
+            border: 2px solid #ced4da;
+            color: #495057;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        .quick-inputs {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .quick-btn {
+            background: #6c757d;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            color: white;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+        
+        .quick-btn:active {
+            background: #5a6268;
+        }
+        
+        @media (max-width: 500px) {
+            .input-output {
+                grid-template-columns: 1fr;
+            }
+            
+            .converter-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔄 Data Converter</h1>
+            <p>Convert between different data formats</p>
+        </div>
+        
+        <!-- Number Conversion -->
+        <div class="converter-section">
+            <div class="section-title">🔢 Number Conversion</div>
+            <div class="converter-grid">
+                <button class="converter-btn" onclick="convertNumber('decimal')">Decimal</button>
+                <button class="converter-btn" onclick="convertNumber('hex')">Hexadecimal</button>
+                <button class="converter-btn" onclick="convertNumber('binary')">Binary</button>
+                <button class="converter-btn" onclick="convertNumber('octal')">Octal</button>
+            </div>
+            <div class="input-output">
+                <textarea class="input-box" id="numberInput" placeholder="Enter number..."></textarea>
+                <div class="output-box" id="numberOutput">Results here...</div>
+            </div>
+            <div class="quick-inputs">
+                <button class="quick-btn" onclick="setNumberInput('255')">255</button>
+                <button class="quick-btn" onclick="setNumberInput('1024')">1024</button>
+                <button class="quick-btn" onclick="setNumberInput('0xFF')">0xFF</button>
+                <button class="quick-btn" onclick="setNumberInput('0b1010')">0b1010</button>
+            </div>
+        </div>
+        
+        <!-- Color Conversion -->
+        <div class="converter-section">
+            <div class="section-title">🎨 Color Conversion</div>
+            <div class="converter-grid">
+                <button class="converter-btn" onclick="convertColor('hex')">HEX</button>
+                <button class="converter-btn" onclick="convertColor('rgb')">RGB</button>
+                <button class="converter-btn" onclick="convertColor('hsl')">HSL</button>
+                <button class="converter-btn" onclick="convertColor('css')">CSS Names</button>
+            </div>
+            <div class="input-output">
+                <textarea class="input-box" id="colorInput" placeholder="Enter color..."></textarea>
+                <div class="output-box" id="colorOutput">Results here...</div>
+            </div>
+            <div class="quick-inputs">
+                <button class="quick-btn" onclick="setColorInput('#FF0000')">Red</button>
+                <button class="quick-btn" onclick="setColorInput('rgb(0,255,0)')">Green</button>
+                <button class="quick-btn" onclick="setColorInput('hsl(240,100%,50%)')">Blue</button>
+                <button class="quick-btn" onclick="randomColor()">Random</button>
+            </div>
+        </div>
+        
+        <!-- JSON Tools -->
+        <div class="converter-section">
+            <div class="section-title">📄 JSON Tools</div>
+            <div class="converter-grid">
+                <button class="converter-btn" onclick="formatJSON()">Format</button>
+                <button class="converter-btn" onclick="minifyJSON()">Minify</button>
+                <button class="converter-btn" onclick="validateJSON()">Validate</button>
+                <button class="converter-btn" onclick="jsonToCSV()">To CSV</button>
+            </div>
+            <div class="input-output">
+                <textarea class="input-box" id="jsonInput" placeholder="Enter JSON..."></textarea>
+                <div class="output-box" id="jsonOutput">Results here...</div>
+            </div>
+            <div class="quick-inputs">
+                <button class="quick-btn" onclick="setJSONSample()">Sample JSON</button>
+                <button class="quick-btn" onclick="clearJSON()">Clear</button>
+            </div>
+        </div>
+        
+        <!-- Unit Conversion -->
+        <div class="converter-section">
+            <div class="section-title">📏 Unit Conversion</div>
+            <div class="converter-grid">
+                <button class="converter-btn" onclick="convertUnit('length')">Length</button>
+                <button class="converter-btn" onclick="convertUnit('weight')">Weight</button>
+                <button class="converter-btn" onclick="convertUnit('temp')">Temperature</button>
+                <button class="converter-btn" onclick="convertUnit('time')">Time</button>
+            </div>
+            <div class="input-output">
+                <textarea class="input-box" id="unitInput" placeholder="Enter value..."></textarea>
+                <div class="output-box" id="unitOutput">Results here...</div>
+            </div>
+            <div class="quick-inputs">
+                <button class="quick-btn" onclick="setUnitInput('100')">100</button>
+                <button class="quick-btn" onclick="setUnitInput('1.5')">1.5</button>
+                <button class="quick-btn" onclick="setUnitInput('32')">32°F</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Number Conversion
+        function convertNumber(type) {
+            const input = document.getElementById('numberInput').value.trim();
+            const output = document.getElementById('numberOutput');
+            
+            if (!input) {
+                output.textContent = 'Enter a number first';
+                return;
+            }
+            
+            let num;
+            
+            // Parse input
+            if (input.startsWith('0x') || input.startsWith('0X')) {
+                num = parseInt(input, 16);
+            } else if (input.startsWith('0b') || input.startsWith('0B')) {
+                num = parseInt(input.slice(2), 2);
+            } else if (input.startsWith('0o') || input.startsWith('0O')) {
+                num = parseInt(input.slice(2), 8);
+            } else {
+                num = parseInt(input, 10);
+            }
+            
+            if (isNaN(num)) {
+                output.textContent = 'Invalid number format';
+                return;
+            }
+            
+            let result = '';
+            switch (type) {
+                case 'decimal':
+                    result = `Decimal: ${num}`;
+                    break;
+                case 'hex':
+                    result = `Hexadecimal: 0x${num.toString(16).toUpperCase()}`;
+                    break;
+                case 'binary':
+                    result = `Binary: 0b${num.toString(2)}`;
+                    break;
+                case 'octal':
+                    result = `Octal: 0o${num.toString(8)}`;
+                    break;
+            }
+            
+            // Show all formats
+            result = `Decimal: ${num}\nHex: 0x${num.toString(16).toUpperCase()}\nBinary: 0b${num.toString(2)}\nOctal: 0o${num.toString(8)}`;
+            
+            output.textContent = result;
+            copyToClipboard(result);
+        }
+        
+        function setNumberInput(value) {
+            document.getElementById('numberInput').value = value;
+        }
+        
+        // Color Conversion
+        function convertColor(type) {
+            const input = document.getElementById('colorInput').value.trim();
+            const output = document.getElementById('colorOutput');
+            
+            if (!input) {
+                output.textContent = 'Enter a color first';
+                return;
+            }
+            
+            let result = '';
+            
+            try {
+                if (input.startsWith('#')) {
+                    // HEX to others
+                    const hex = input.slice(1);
+                    const r = parseInt(hex.substr(0, 2), 16);
+                    const g = parseInt(hex.substr(2, 2), 16);
+                    const b = parseInt(hex.substr(4, 2), 16);
+                    
+                    const hsl = rgbToHsl(r, g, b);
+                    
+                    result = `HEX: ${input}\nRGB: rgb(${r}, ${g}, ${b})\nHSL: hsl(${hsl[0]}, ${hsl[1]}%, ${hsl[2]}%)`;
+                    
+                } else if (input.startsWith('rgb')) {
+                    // RGB to others
+                    const match = input.match(/rgb\\((\\d+),\\s*(\\d+),\\s*(\\d+)\\)/);
+                    if (match) {
+                        const r = parseInt(match[1]);
+                        const g = parseInt(match[2]);
+                        const b = parseInt(match[3]);
+                        
+                        const hex = '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+                        const hsl = rgbToHsl(r, g, b);
+                        
+                        result = `RGB: ${input}\nHEX: ${hex}\nHSL: hsl(${hsl[0]}, ${hsl[1]}%, ${hsl[2]}%)`;
+                    }
+                    
+                } else if (input.startsWith('hsl')) {
+                    // HSL to others
+                    const match = input.match(/hsl\\((\\d+),\\s*(\\d+)%,\\s*(\\d+)%\\)/);
+                    if (match) {
+                        const h = parseInt(match[1]);
+                        const s = parseInt(match[2]);
+                        const l = parseInt(match[3]);
+                        
+                        const rgb = hslToRgb(h / 360, s / 100, l / 100);
+                        const hex = '#' + ((1 << 24) + (rgb[0] << 16) + (rgb[1] << 8) + rgb[2]).toString(16).slice(1);
+                        
+                        result = `HSL: ${input}\nRGB: rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})\nHEX: ${hex}`;
+                    }
+                } else {
+                    result = 'Invalid color format. Use #FF0000, rgb(255,0,0), or hsl(0,100%,50%)';
+                }
+                
+            } catch (e) {
+                result = 'Error parsing color';
+            }
+            
+            output.textContent = result;
+            copyToClipboard(result);
+        }
+        
+        function setColorInput(value) {
+            document.getElementById('colorInput').value = value;
+        }
+        
+        function randomColor() {
+            const hex = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+            setColorInput(hex);
+        }
+        
+        // JSON Tools
+        function formatJSON() {
+            const input = document.getElementById('jsonInput').value.trim();
+            const output = document.getElementById('jsonOutput');
+            
+            try {
+                const parsed = JSON.parse(input);
+                const formatted = JSON.stringify(parsed, null, 2);
+                output.textContent = formatted;
+                copyToClipboard(formatted);
+            } catch (e) {
+                output.textContent = `JSON Error: ${e.message}`;
+            }
+        }
+        
+        function minifyJSON() {
+            const input = document.getElementById('jsonInput').value.trim();
+            const output = document.getElementById('jsonOutput');
+            
+            try {
+                const parsed = JSON.parse(input);
+                const minified = JSON.stringify(parsed);
+                output.textContent = minified;
+                copyToClipboard(minified);
+            } catch (e) {
+                output.textContent = `JSON Error: ${e.message}`;
+            }
+        }
+        
+        function validateJSON() {
+            const input = document.getElementById('jsonInput').value.trim();
+            const output = document.getElementById('jsonOutput');
+            
+            try {
+                JSON.parse(input);
+                output.textContent = 'Valid JSON ✓';
+            } catch (e) {
+                output.textContent = `Invalid JSON: ${e.message}`;
+            }
+        }
+        
+        function jsonToCSV() {
+            const input = document.getElementById('jsonInput').value.trim();
+            const output = document.getElementById('jsonOutput');
+            
+            try {
+                const data = JSON.parse(input);
+                if (Array.isArray(data) && data.length > 0) {
+                    const headers = Object.keys(data[0]);
+                    const csv = [
+                        headers.join(','),
+                        ...data.map(row => headers.map(field => `"${row[field] || ''}"`).join(','))
+                    ].join('\\n');
+                    
+                    output.textContent = csv;
+                    copyToClipboard(csv);
+                } else {
+                    output.textContent = 'JSON must be an array of objects';
+                }
+            } catch (e) {
+                output.textContent = `Error: ${e.message}`;
+            }
+        }
+        
+        function setJSONSample() {
+            const sample = `[
+  {"name": "John", "age": 30, "city": "New York"},
+  {"name": "Jane", "age": 25, "city": "Los Angeles"}
+]`;
+            document.getElementById('jsonInput').value = sample;
+        }
+        
+        function clearJSON() {
+            document.getElementById('jsonInput').value = '';
+            document.getElementById('jsonOutput').textContent = 'Results here...';
+        }
+        
+        // Unit Conversion
+        function convertUnit(type) {
+            const input = parseFloat(document.getElementById('unitInput').value.trim());
+            const output = document.getElementById('unitOutput');
+            
+            if (isNaN(input)) {
+                output.textContent = 'Enter a valid number first';
+                return;
+            }
+            
+            let result = '';
+            
+            switch (type) {
+                case 'length':
+                    result = `Meters: ${input}m\nFeet: ${(input * 3.28084).toFixed(2)}ft\nInches: ${(input * 39.3701).toFixed(2)}in\nKilometers: ${(input / 1000).toFixed(4)}km\nMiles: ${(input * 0.000621371).toFixed(6)}mi`;
+                    break;
+                    
+                case 'weight':
+                    result = `Kilograms: ${input}kg\nPounds: ${(input * 2.20462).toFixed(2)}lbs\nOunces: ${(input * 35.274).toFixed(2)}oz\nGrams: ${(input * 1000).toFixed(1)}g\nStones: ${(input * 0.157473).toFixed(3)}st`;
+                    break;
+                    
+                case 'temp':
+                    const celsius = input;
+                    const fahrenheit = (celsius * 9/5) + 32;
+                    const kelvin = celsius + 273.15;
+                    result = `Celsius: ${celsius}°C\nFahrenheit: ${fahrenheit.toFixed(2)}°F\nKelvin: ${kelvin.toFixed(2)}K`;
+                    break;
+                    
+                case 'time':
+                    const seconds = input;
+                    result = `Seconds: ${seconds}s\nMinutes: ${(seconds / 60).toFixed(2)}min\nHours: ${(seconds / 3600).toFixed(4)}hrs\nDays: ${(seconds / 86400).toFixed(6)}days\nWeeks: ${(seconds / 604800).toFixed(8)}weeks`;
+                    break;
+            }
+            
+            output.textContent = result;
+            copyToClipboard(result);
+        }
+        
+        function setUnitInput(value) {
+            document.getElementById('unitInput').value = value;
+        }
+        
+        // Helper functions
+        function rgbToHsl(r, g, b) {
+            r /= 255; g /= 255; b /= 255;
+            const max = Math.max(r, g, b), min = Math.min(r, g, b);
+            let h, s, l = (max + min) / 2;
+            
+            if (max === min) {
+                h = s = 0;
+            } else {
+                const d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                switch (max) {
+                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                    case g: h = (b - r) / d + 2; break;
+                    case b: h = (r - g) / d + 4; break;
+                }
+                h /= 6;
+            }
+            
+            return [Math.round(h * 360), Math.round(s * 100), Math.round(l * 100)];
+        }
+        
+        function hslToRgb(h, s, l) {
+            let r, g, b;
+            
+            if (s === 0) {
+                r = g = b = l;
+            } else {
+                const hue2rgb = (p, q, t) => {
+                    if (t < 0) t += 1;
+                    if (t > 1) t -= 1;
+                    if (t < 1/6) return p + (q - p) * 6 * t;
+                    if (t < 1/2) return q;
+                    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                    return p;
+                };
+                
+                const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                const p = 2 * l - q;
+                r = hue2rgb(p, q, h + 1/3);
+                g = hue2rgb(p, q, h);
+                b = hue2rgb(p, q, h - 1/3);
+            }
+            
+            return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+        }
+        
+        function copyToClipboard(text) {
+            try {
+                navigator.clipboard.writeText(text).catch(() => {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = text;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                });
+            } catch (e) {
+                // Silent fail
+            }
+        }
+    </script>
+</body>
+</html>
