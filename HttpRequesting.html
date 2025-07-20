@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>HTTP Header Viewer & Request Tester</title>
+<style>
+  :root {
+    --bg: #f9fafb;
+    --text: #222;
+    --accent: #3b82f6;
+    --input-bg: #fff;
+    --border: #ccc;
+    --error: #ef4444;
+    --success: #10b981;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121212;
+      --text: #eee;
+      --accent: #60a5fa;
+      --input-bg: #1f1f1f;
+      --border: #444;
+      --error: #f87171;
+      --success: #34d399;
+    }
+  }
+  body {
+    margin: 0; padding: 1rem;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  h1 {
+    margin-bottom: 1rem;
+  }
+  form {
+    width: 100%;
+    max-width: 720px;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+    margin-bottom: 1rem;
+  }
+  label {
+    display: block;
+    margin-top: 1rem;
+    font-weight: 600;
+  }
+  input[type="text"], input[type="url"], select, textarea {
+    width: 100%;
+    padding: 0.5rem;
+    margin-top: 0.25rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--input-bg);
+    color: var(--text);
+    font-family: monospace, monospace;
+    font-size: 1rem;
+  }
+  textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+  button {
+    margin-top: 1.5rem;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    background-color: var(--accent);
+    color: white;
+    font-weight: 700;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  button:hover:not(:disabled) {
+    background-color: #2563eb;
+  }
+  button:disabled {
+    background-color: #93c5fd;
+    cursor: not-allowed;
+  }
+  .result {
+    width: 100%;
+    max-width: 720px;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+    font-family: monospace, monospace;
+    font-size: 0.9rem;
+    margin-bottom: 2rem;
+  }
+  .headers {
+    margin-top: 0.5rem;
+    max-height: 200px;
+    overflow-y: auto;
+    border-top: 1px solid var(--border);
+    padding-top: 0.5rem;
+  }
+  .header-item {
+    margin-bottom: 0.25rem;
+  }
+  .error {
+    color: var(--error);
+    font-weight: 700;
+    margin-top: 1rem;
+  }
+  .success {
+    color: var(--success);
+    font-weight: 700;
+    margin-top: 1rem;
+  }
+</style>
+</head>
+<body>
+
+<h1>HTTP Header Viewer & Request Tester</h1>
+
+<form id="request-form">
+  <label for="url">Request URL</label>
+  <input type="url" id="url" placeholder="https://api.example.com/data" required />
+
+  <label for="method">HTTP Method</label>
+  <select id="method">
+    <option>GET</option>
+    <option>POST</option>
+    <option>PUT</option>
+    <option>PATCH</option>
+    <option>DELETE</option>
+    <option>HEAD</option>
+    <option>OPTIONS</option>
+  </select>
+
+  <label for="headers">Custom Headers (JSON format)</label>
+  <textarea id="headers" placeholder='{"Authorization": "Bearer token", "X-Custom-Header": "value"}'></textarea>
+
+  <label for="body">Request Body (for POST, PUT, PATCH)</label>
+  <textarea id="body" placeholder='{"key":"value"}'></textarea>
+
+  <button type="submit">Send Request</button>
+  <div id="status-message"></div>
+</form>
+
+<div class="result" id="response-status"></div>
+<div class="result" id="response-headers"></div>
+<div class="result" id="response-body"></div>
+
+<script>
+  const form = document.getElementById('request-form');
+  const responseStatus = document.getElementById('response-status');
+  const responseHeaders = document.getElementById('response-headers');
+  const responseBody = document.getElementById('response-body');
+  const statusMessage = document.getElementById('status-message');
+
+  function formatHeaders(headers) {
+    let result = '';
+    headers.forEach((value, key) => {
+      result += `${key}: ${value}\n`;
+    });
+    return result.trim();
+  }
+
+  function tryParseJSON(text) {
+    try {
+      return JSON.stringify(JSON.parse(text), null, 2);
+    } catch {
+      return text;
+    }
+  }
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+
+    responseStatus.textContent = '';
+    responseHeaders.textContent = '';
+    responseBody.textContent = '';
+    statusMessage.textContent = '';
+    statusMessage.className = '';
+
+    const url = document.getElementById('url').value.trim();
+    const method = document.getElementById('method').value;
+    const headersRaw = document.getElementById('headers').value.trim();
+    const bodyRaw = document.getElementById('body').value;
+
+    if (!url) {
+      statusMessage.textContent = 'Please enter a valid URL.';
+      statusMessage.className = 'error';
+      return;
+    }
+
+    let headers = {};
+    if (headersRaw) {
+      try {
+        headers = JSON.parse(headersRaw);
+        if (typeof headers !== 'object' || Array.isArray(headers)) throw new Error();
+      } catch {
+        statusMessage.textContent = 'Headers must be a valid JSON object.';
+        statusMessage.className = 'error';
+        return;
+      }
+    }
+
+    let fetchOptions = {
+      method,
+      headers
+    };
+
+    if (method !== 'GET' && method !== 'HEAD' && bodyRaw) {
+      fetchOptions.body = bodyRaw;
+    }
+
+    statusMessage.textContent = 'Sending request...';
+    statusMessage.className = '';
+
+    try {
+      const response = await fetch(url, fetchOptions);
+
+      responseStatus.textContent = `Status: ${response.status} ${response.statusText}`;
+
+      const respHeaders = formatHeaders(response.headers);
+      responseHeaders.textContent = 'Response Headers:\n' + respHeaders;
+
+      let text = await response.text();
+
+      // Try to pretty print JSON if possible
+      responseBody.textContent = tryParseJSON(text);
+
+      statusMessage.textContent = 'Request completed successfully.';
+      statusMessage.className = 'success';
+    } catch (err) {
+      statusMessage.textContent = 'Error: ' + err.message;
+      statusMessage.className = 'error';
+    }
+  });
+</script>
+
+</body>
+</html>
