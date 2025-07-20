@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -22,85 +23,90 @@
     const db = getDatabase(app);
     const videoRef = ref(db, 'activeVideo');
 
-    const overlay = document.getElementById("overlay");
-    const uploader = document.getElementById("uploadBtn");
-    const input = document.getElementById("videoInput");
-    const player = document.getElementById("videoPlayer");
-    const banner = document.getElementById("banner");
+    window.addEventListener('load', () => {
+      const overlay = document.getElementById("overlay");
+      const uploader = document.getElementById("uploadBtn");
+      const input = document.getElementById("videoInput");
+      const player = document.getElementById("videoPlayer");
+      const banner = document.getElementById("banner");
 
-    let currentUser = localStorage.getItem("nickname") || prompt("Enter your nickname:");
-    localStorage.setItem("nickname", currentUser);
+      let currentUser = localStorage.getItem("nickname") || prompt("Enter your nickname:");
+      localStorage.setItem("nickname", currentUser);
 
-    // Watch for video change
-    onValue(videoRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        uploader.style.display = "none";
-        overlay.style.display = "block";
-        banner.textContent = `${data.user} is playing: ${data.name}`;
-        if (data.type === "youtube") {
-          player.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${data.id}?autoplay=1" allowfullscreen></iframe>`;
+      // Watch for video change
+      onValue(videoRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          uploader.style.display = "none";
+          overlay.style.display = "block";
+          banner.textContent = `${data.user} is playing: ${data.name}`;
+          if (data.type === "youtube") {
+            player.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${data.id}?autoplay=1" allowfullscreen></iframe>`;
+          } else {
+            player.innerHTML = `<video controls autoplay style="width: 100%; height: 100%"><source src="${data.url}"></video>`;
+          }
         } else {
-          player.innerHTML = `<video controls autoplay style="width: 100%; height: 100%"><source src="${data.url}"></video>`;
+          overlay.style.display = "none";
+          uploader.style.display = "block";
+          player.innerHTML = "";
+          banner.textContent = "";
         }
-      } else {
-        overlay.style.display = "none";
-        uploader.style.display = "block";
-        player.innerHTML = "";
-        banner.textContent = "";
-      }
-    });
-
-    document.getElementById("logout").onclick = () => {
-      localStorage.removeItem("nickname");
-      location.reload();
-    };
-
-    uploader.onclick = () => input.click();
-
-    input.onchange = async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const url = URL.createObjectURL(file);
-      const videoName = file.name;
-
-      set(videoRef, {
-        user: currentUser,
-        name: videoName,
-        url: url,
-        type: "file"
       });
-    };
 
-    document.getElementById("linkSubmit").onclick = () => {
-      const url = document.getElementById("videoLink").value.trim();
-      if (!url) return;
+      document.getElementById("logout").onclick = () => {
+        localStorage.removeItem("nickname");
+        location.reload();
+      };
 
-      let videoID = null;
-      if (url.includes("youtube.com") || url.includes("youtu.be")) {
-        const match = url.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/);
-        if (match) {
-          videoID = match[1];
-        }
-      }
+      uploader.onclick = () => input.click();
 
-      if (videoID) {
+      input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const url = URL.createObjectURL(file);
+        const videoName = file.name;
+
         set(videoRef, {
           user: currentUser,
-          name: `YouTube Video`,
-          id: videoID,
-          type: "youtube"
-        });
-      } else {
-        set(videoRef, {
-          user: currentUser,
-          name: url.split("/").pop(),
+          name: videoName,
           url: url,
           type: "file"
         });
-      }
-    };
+      };
 
+      document.getElementById("linkSubmit").onclick = () => {
+        const url = document.getElementById("videoLink").value.trim();
+        if (!url) return;
+
+        let videoID = null;
+        if (url.includes("youtube.com") || url.includes("youtu.be")) {
+          const match = url.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/);
+          if (match) {
+            videoID = match[1];
+          }
+        }
+
+        if (videoID) {
+          set(videoRef, {
+            user: currentUser,
+            name: `YouTube Video`,
+            id: videoID,
+            type: "youtube"
+          });
+        } else {
+          set(videoRef, {
+            user: currentUser,
+            name: url.split("/").pop(),
+            url: url,
+            type: "file"
+          });
+        }
+      };
+
+      document.getElementById("stopVideo").onclick = () => {
+        remove(videoRef);
+      };
+    });
   </script>
 
   <style>
@@ -120,55 +126,84 @@
       text-align: center;
       font-size: 18px;
     }
-    #uploadBtn, #logout {
+    #uploadBtn, #logout, #linkSubmit, #stopVideo {
       margin: 10px;
       padding: 10px 20px;
       font-size: 16px;
       background: #3b3b3b;
       color: white;
       border: none;
+      border-radius: 5px;
       cursor: pointer;
     }
+    #uploadBtn:hover, #logout:hover, #linkSubmit:hover, #stopVideo:hover {
+      background: #555;
+    }
     #overlay {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      background: black;
-      z-index: 999;
+      flex: 1;
       display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      position: relative;
     }
     #videoPlayer {
       width: 100%;
       height: 100%;
     }
     #controls {
-      display: flex;
-      gap: 10px;
-      margin: 10px;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 10;
     }
-    input[type="text"] {
-      padding: 8px;
-      font-size: 16px;
+    .upload-area {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    .link-section {
+      margin: 20px;
+      text-align: center;
+    }
+    #videoLink {
       width: 300px;
+      padding: 10px;
+      margin: 10px;
+      background: #2a2a2a;
+      color: white;
+      border: 1px solid #555;
+      border-radius: 5px;
+    }
+    #videoInput {
+      display: none;
     }
   </style>
 </head>
+
 <body>
   <div id="banner"></div>
-
-  <div id="controls">
-    <button id="uploadBtn">📁 Upload Video or Image</button>
-    <input id="videoInput" type="file" accept="video/*,image/*" style="display:none">
-    <input type="text" id="videoLink" placeholder="Paste video/image URL">
-    <button id="linkSubmit">▶️ Play Link</button>
-    <button id="logout">🚪 Logout</button>
-  </div>
-
+  
   <div id="overlay">
     <div id="videoPlayer"></div>
+    <div id="controls">
+      <button id="stopVideo">Stop Video</button>
+      <button id="logout">Logout</button>
+    </div>
+  </div>
+  
+  <div class="upload-area" id="uploadArea">
+    <button id="uploadBtn">Upload Video File</button>
+    <input type="file" id="videoInput" accept="video/*">
+    
+    <div class="link-section">
+      <h3>Or paste a video link:</h3>
+      <input type="text" id="videoLink" placeholder="YouTube URL or direct video link">
+      <br>
+      <button id="linkSubmit">Play Video</button>
+    </div>
+    
+    <button id="logout">Logout</button>
   </div>
 </body>
 </html>
+
