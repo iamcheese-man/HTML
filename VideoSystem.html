@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -7,6 +6,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDrbDxPGImIwRZ2-eowHUblo1inrCgF_dA",
@@ -21,7 +21,10 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+    const auth = getAuth(app);
     const videoRef = ref(db, 'activeVideo');
+
+    let currentUser = null;
 
     window.addEventListener('load', () => {
       const overlay = document.getElementById("overlay");
@@ -29,90 +32,197 @@
       const input = document.getElementById("videoInput");
       const player = document.getElementById("videoPlayer");
       const banner = document.getElementById("banner");
+      const loginScreen = document.getElementById("loginScreen");
+      const uploadArea = document.getElementById("uploadArea");
+      const authError = document.getElementById("authError");
 
-      let currentUser = localStorage.getItem("nickname") || prompt("Enter your nickname:");
-      localStorage.setItem("nickname", currentUser);
+      // Auth state listener
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          currentUser = user;
+          loginScreen.style.display = "none";
+          uploadArea.style.display = "flex";
 
-      // Watch for video change
-      onValue(videoRef, (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-          uploader.style.display = "none";
-          overlay.style.display = "block";
-          banner.textContent = `${data.user} is playing: ${data.name}`;
-          if (data.type === "youtube") {
-            player.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${data.id}?autoplay=1" allowfullscreen></iframe>`;
-          } else {
-            player.innerHTML = `<video controls autoplay style="width: 100%; height: 100%"><source src="${data.url}"></video>`;
-          }
+          // Small delay to ensure database auth is ready
+          setTimeout(() => {
+            // Watch for video changes only when authenticated
+            onValue(videoRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+              uploader.style.display = "none";
+              overlay.style.display = "block";
+              banner.textContent = `${data.user} is playing: ${data.name}`;
+
+              if (data.type === "youtube") {
+                const videoId = data.id || extractYouTubeId(data.url);
+                player.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0" frameborder="0" allowfullscreen></iframe>`;
+              } else {
+                player.innerHTML = `<video controls autoplay style="width: 100%; height: 100%; object-fit: contain;"><source src="${data.url}" type="video/mp4"><source src="${data.url}" type="video/webm"><source src="${data.url}" type="video/ogg">Your browser does not support the video tag.</video>`;
+              }
+            } else {
+              overlay.style.display = "none";
+              uploader.style.display = "block";
+              player.innerHTML = "";
+              banner.textContent = "";
+            }
+            });
+          }, 1000); // 1 second delay to ensure auth is fully ready
         } else {
+          currentUser = null;
+          loginScreen.style.display = "flex";
+          uploadArea.style.display = "none";
           overlay.style.display = "none";
-          uploader.style.display = "block";
-          player.innerHTML = "";
-          banner.textContent = "";
         }
       });
 
-      document.getElementById("logout").onclick = () => {
-        localStorage.removeItem("nickname");
-        location.reload();
+      // Extract YouTube video ID from various URL formats
+      function extractYouTubeId(url) {
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
+      }
+
+      // Register new user
+      document.getElementById("registerBtn").onclick = async () => {
+        const email = document.getElementById("regEmail").value.trim();
+        const password = document.getElementById("regPassword").value.trim();
+        const nickname = document.getElementById("regNickname").value.trim();
+
+        if (!email || !password || !nickname) {
+          authError.textContent = "Please fill in all fields";
+          return;
+        }
+
+        try {
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          await updateProfile(userCredential.user, { displayName: nickname });
+          authError.textContent = "";
+        } catch (error) {
+          authError.textContent = error.message;
+        }
       };
 
+      // Login existing user
+      document.getElementById("loginBtn").onclick = async () => {
+        const email = document.getElementById("loginEmail").value.trim();
+        const password = document.getElementById("loginPassword").value.trim();
+
+        if (!email || !password) {
+          authError.textContent = "Please fill in email and password";
+          return;
+        }
+
+        try {
+          await signInWithEmailAndPassword(auth, email, password);
+          authError.textContent = "";
+        } catch (error) {
+          authError.textContent = error.message;
+        }
+      };
+
+      // Toggle between login and register forms
+      document.getElementById("showRegister").onclick = () => {
+        document.getElementById("loginForm").style.display = "none";
+        document.getElementById("registerForm").style.display = "block";
+        authError.textContent = "";
+      };
+
+      document.getElementById("showLogin").onclick = () => {
+        document.getElementById("registerForm").style.display = "none";
+        document.getElementById("loginForm").style.display = "block";
+        authError.textContent = "";
+      };
+
+      // Logout
+      document.getElementById("logout").onclick = async () => {
+        await signOut(auth);
+      };
+
+      // File upload
       uploader.onclick = () => input.click();
 
       input.onchange = async (e) => {
         const file = e.target.files[0];
-        if (!file) return;
+        if (!file || !currentUser) return;
+
         const url = URL.createObjectURL(file);
         const videoName = file.name;
 
-        set(videoRef, {
-          user: currentUser,
-          name: videoName,
-          url: url,
-          type: "file"
-        });
-      };
-
-      document.getElementById("linkSubmit").onclick = () => {
-        const url = document.getElementById("videoLink").value.trim();
-        if (!url) return;
-
-        let videoID = null;
-        if (url.includes("youtube.com") || url.includes("youtu.be")) {
-          const match = url.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/);
-          if (match) {
-            videoID = match[1];
-          }
-        }
-
-        if (videoID) {
-          set(videoRef, {
-            user: currentUser,
-            name: `YouTube Video`,
-            id: videoID,
-            type: "youtube"
-          });
-        } else {
-          set(videoRef, {
-            user: currentUser,
-            name: url.split("/").pop(),
+        try {
+          await set(videoRef, {
+            user: currentUser.displayName || currentUser.email,
+            name: videoName,
             url: url,
-            type: "file"
+            type: "file",
+            timestamp: Date.now()
           });
+        } catch (error) {
+          console.error("Error uploading video:", error);
         }
       };
 
-      document.getElementById("stopVideo").onclick = () => {
-        remove(videoRef);
+      // Link submission
+      document.getElementById("linkSubmit").onclick = async () => {
+        const url = document.getElementById("videoLink").value.trim();
+        if (!url || !currentUser) return;
+
+        const videoId = extractYouTubeId(url);
+
+        try {
+          if (videoId) {
+            await set(videoRef, {
+              user: currentUser.displayName || currentUser.email,
+              name: `YouTube Video`,
+              id: videoId,
+              url: url,
+              type: "youtube",
+              timestamp: Date.now()
+            });
+          } else {
+            await set(videoRef, {
+              user: currentUser.displayName || currentUser.email,
+              name: url.split("/").pop() || "Direct Video Link",
+              url: url,
+              type: "file",
+              timestamp: Date.now()
+            });
+          }
+          document.getElementById("videoLink").value = "";
+        } catch (error) {
+          console.error("Error setting video:", error);
+        }
       };
+
+
+
+      // Enter key listeners
+      document.getElementById("videoLink").addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          document.getElementById("linkSubmit").click();
+        }
+      });
+
+      ['regEmail', 'regPassword', 'regNickname', 'loginEmail', 'loginPassword'].forEach(id => {
+        document.getElementById(id).addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            if (id.startsWith('reg')) {
+              document.getElementById("registerBtn").click();
+            } else {
+              document.getElementById("loginBtn").click();
+            }
+          }
+        });
+      });
     });
   </script>
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
     body {
       margin: 0;
-      font-family: sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: #121212;
       color: white;
       display: flex;
@@ -122,37 +232,58 @@
     }
     #banner {
       background: #1f1f1f;
-      padding: 10px;
+      padding: 15px;
       text-align: center;
       font-size: 18px;
+      border-bottom: 2px solid #333;
     }
-    #uploadBtn, #logout, #linkSubmit, #stopVideo {
+    button {
       margin: 10px;
-      padding: 10px 20px;
+      padding: 12px 24px;
       font-size: 16px;
-      background: #3b3b3b;
+      background: #007acc;
       color: white;
       border: none;
-      border-radius: 5px;
+      border-radius: 8px;
       cursor: pointer;
+      transition: background 0.3s;
     }
-    #uploadBtn:hover, #logout:hover, #linkSubmit:hover, #stopVideo:hover {
-      background: #555;
+    button:hover {
+      background: #005fa3;
     }
+    #uploadBtn {
+      background: #28a745;
+      font-size: 18px;
+      padding: 20px 40px;
+    }
+    #uploadBtn:hover {
+      background: #218838;
+    }
+
     #overlay {
       flex: 1;
       display: none;
       position: relative;
+      background: #000;
     }
     #videoPlayer {
       width: 100%;
       height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #videoPlayer video, #videoPlayer iframe {
+      max-width: 100%;
+      max-height: 100%;
     }
     #controls {
       position: absolute;
-      top: 10px;
-      right: 10px;
+      top: 15px;
+      right: 15px;
       z-index: 10;
+      display: flex;
+      gap: 10px;
     }
     .upload-area {
       flex: 1;
@@ -160,50 +291,149 @@
       align-items: center;
       justify-content: center;
       flex-direction: column;
+      padding: 20px;
     }
     .link-section {
-      margin: 20px;
+      margin: 30px;
       text-align: center;
+      background: #2a2a2a;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
     }
     #videoLink {
-      width: 300px;
-      padding: 10px;
-      margin: 10px;
-      background: #2a2a2a;
+      width: 400px;
+      padding: 12px;
+      margin: 15px;
+      background: #1a1a1a;
       color: white;
-      border: 1px solid #555;
-      border-radius: 5px;
+      border: 2px solid #555;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    #videoLink:focus {
+      border-color: #007acc;
+      outline: none;
     }
     #videoInput {
+      display: none;
+    }
+    #loginScreen {
+      flex: 1;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      background: #121212;
+      padding: 20px;
+    }
+    .auth-container {
+      background: #2a2a2a;
+      padding: 40px;
+      border-radius: 15px;
+      text-align: center;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+      width: 100%;
+      max-width: 400px;
+    }
+    .auth-container h2 {
+      margin-bottom: 30px;
+      color: #ffffff;
+      font-size: 28px;
+    }
+    .auth-input {
+      width: 100%;
+      padding: 15px;
+      margin: 10px 0;
+      background: #1a1a1a;
+      color: white;
+      border: 2px solid #555;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    .auth-input:focus {
+      border-color: #007acc;
+      outline: none;
+    }
+    .auth-btn {
+      width: 100%;
+      padding: 15px;
+      font-size: 18px;
+      margin: 15px 0;
+    }
+    .toggle-form {
+      background: none;
+      color: #007acc;
+      text-decoration: underline;
+      border: none;
+      padding: 5px;
+      margin: 10px;
+      cursor: pointer;
+    }
+    .toggle-form:hover {
+      color: #005fa3;
+    }
+    #authError {
+      color: #ff4757;
+      margin: 15px 0;
+      font-size: 14px;
+    }
+    #registerForm {
       display: none;
     }
   </style>
 </head>
 
 <body>
+  <!-- Login/Register Screen -->
+  <div id="loginScreen">
+    <div class="auth-container">
+      <h2>VideoShare</h2>
+
+      <!-- Login Form -->
+      <div id="loginForm">
+        <h3>Login</h3>
+        <input type="email" id="loginEmail" class="auth-input" placeholder="Email" required>
+        <input type="password" id="loginPassword" class="auth-input" placeholder="Password" required>
+        <button id="loginBtn" class="auth-btn">Login</button>
+        <p>Don't have an account? <button id="showRegister" class="toggle-form">Register here</button></p>
+      </div>
+
+      <!-- Register Form -->
+      <div id="registerForm">
+        <h3>Register</h3>
+        <input type="email" id="regEmail" class="auth-input" placeholder="Email" required>
+        <input type="password" id="regPassword" class="auth-input" placeholder="Password" required>
+        <input type="text" id="regNickname" class="auth-input" placeholder="Nickname" maxlength="20" required>
+        <button id="registerBtn" class="auth-btn">Register</button>
+        <p>Already have an account? <button id="showLogin" class="toggle-form">Login here</button></p>
+      </div>
+
+      <div id="authError"></div>
+    </div>
+  </div>
+
   <div id="banner"></div>
-  
+
   <div id="overlay">
     <div id="videoPlayer"></div>
     <div id="controls">
-      <button id="stopVideo">Stop Video</button>
       <button id="logout">Logout</button>
     </div>
   </div>
-  
+
   <div class="upload-area" id="uploadArea">
-    <button id="uploadBtn">Upload Video File</button>
+    <button id="uploadBtn">📁 Upload Video File</button>
     <input type="file" id="videoInput" accept="video/*">
-    
+
     <div class="link-section">
-      <h3>Or paste a video link:</h3>
+      <h3>🔗 Or paste a video link:</h3>
       <input type="text" id="videoLink" placeholder="YouTube URL or direct video link">
       <br>
-      <button id="linkSubmit">Play Video</button>
+      <button id="linkSubmit">▶️ Play Video</button>
     </div>
-    
+
     <button id="logout">Logout</button>
   </div>
 </body>
 </html>
-
