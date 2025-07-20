@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Clipboard History</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 1rem;
+      background: #f4f4f4;
+    }
+    h1 { text-align: center; }
+    .history {
+      max-height: 70vh;
+      overflow-y: auto;
+      margin-top: 1rem;
+      border: 1px solid #ccc;
+      background: white;
+      border-radius: 8px;
+      padding: 1rem;
+    }
+    .item {
+      border-bottom: 1px solid #ddd;
+      padding: 0.5rem 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .item button {
+      margin-left: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>📋 Clipboard History Viewer</h1>
+  <div class="history" id="history"></div>
+
+  <script>
+    const historyDiv = document.getElementById('history');
+    const historyList = [];
+
+    document.addEventListener('copy', async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (text && !historyList.includes(text)) {
+          historyList.unshift(text);
+          renderHistory();
+        }
+      } catch (err) {
+        alert('Clipboard read failed.');
+      }
+    });
+
+    function renderHistory() {
+      historyDiv.innerHTML = '';
+      historyList.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `<span>${item}</span>
+          <button onclick="copyText('${encodeURIComponent(item)}')">Copy</button>`;
+        historyDiv.appendChild(div);
+      });
+    }
+
+    function copyText(encoded) {
+      const decoded = decodeURIComponent(encoded);
+      navigator.clipboard.writeText(decoded);
+    }
+  </script>
+</body>
+</html>
