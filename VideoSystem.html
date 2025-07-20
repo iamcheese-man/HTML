@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Shared Video Player with Email Login & Nickname</title>
 <style>
+  /* same styles as before, omitted for brevity */
   body {
     font-family: Arial, sans-serif;
     margin: 0; padding: 0;
@@ -99,10 +100,6 @@
     color: #666;
     font-size: 1rem;
   }
-  #clear-btn {
-    margin-top: 1rem;
-    background: #d33;
-  }
   #logout-btn {
     margin-top: 0.5rem;
     background: #444;
@@ -178,7 +175,7 @@
     <div id="video-container" title="Click to set a video">
       <div id="video-placeholder">Click here to play a video</div>
     </div>
-    <button id="clear-btn" disabled>Clear Video</button>
+    <!-- Clear button removed so users cannot clear -->
     <button id="logout-btn">Logout</button>
   </div>
 
@@ -225,7 +222,6 @@
   const statusHeader = document.getElementById('status');
   const videoContainer = document.getElementById('video-container');
   const videoPlaceholder = document.getElementById('video-placeholder');
-  const clearBtn = document.getElementById('clear-btn');
   const logoutBtn = document.getElementById('logout-btn');
   const authStatus = document.getElementById('auth-status');
 
@@ -244,11 +240,34 @@
   let currentUser = null;
   let isLoginMode = false; // false = signup, true = login
 
-  // Parse video URL for youtube or direct mp4
+  // Improved parseVideoUrl: handle more YouTube URLs and direct mp4 links
   function parseVideoUrl(url) {
-    const ytMatch = url.match(/^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w\-]{11})/);
-    if (ytMatch) return { type: 'youtube', id: ytMatch[1] };
-    if (url.match(/\.(mp4)(\?|$)/i)) return { type: 'mp4', url };
+    // Normalize & parse common YouTube URLs
+    // Examples supported: 
+    // https://www.youtube.com/watch?v=VIDEO_ID
+    // https://youtu.be/VIDEO_ID
+    // https://youtube.com/watch?v=VIDEO_ID&other=params
+    let ytId = null;
+    try {
+      const u = new URL(url);
+      if (u.hostname.includes("youtube.com")) {
+        ytId = u.searchParams.get("v");
+      } else if (u.hostname === "youtu.be") {
+        ytId = u.pathname.slice(1);
+      }
+    } catch {
+      // invalid URL
+    }
+
+    if (ytId && ytId.length === 11) {
+      return { type: 'youtube', id: ytId };
+    }
+
+    // Check for direct MP4 link (simple check)
+    if (url.match(/^https?:\/\/.+\.mp4(\?.*)?$/i)) {
+      return { type: 'mp4', url };
+    }
+
     return null;
   }
 
@@ -257,17 +276,15 @@
     if (!videoData) {
       videoPlaceholder.textContent = 'Click here to play a video';
       videoContainer.appendChild(videoPlaceholder);
-      clearBtn.disabled = true;
       statusHeader.textContent = 'No video playing';
       return;
     }
-    clearBtn.disabled = false;
     const { user, video } = videoData;
     statusHeader.textContent = `${user} is playing ${video.type === 'youtube' ? 'a YouTube video' : video.url}`;
 
     if (video.type === 'youtube') {
       const iframe = document.createElement('iframe');
-      iframe.src = `https://www.youtube.com/embed/${video.id}?autoplay=1&rel=0`;
+      iframe.src = `https://www.youtube.com/embed/${video.id}?autoplay=1&mute=1&rel=0`;
       iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
       iframe.allowFullscreen = true;
       videoContainer.appendChild(iframe);
@@ -276,16 +293,9 @@
       videoEl.src = video.url;
       videoEl.controls = true;
       videoEl.autoplay = true;
+      videoEl.muted = true; // mute to allow autoplay
       videoContainer.appendChild(videoEl);
     }
-  }
-
-  function clearVideoUI() {
-    videoContainer.innerHTML = '';
-    videoPlaceholder.textContent = 'Click here to play a video';
-    videoContainer.appendChild(videoPlaceholder);
-    clearBtn.disabled = true;
-    statusHeader.textContent = 'No video playing';
   }
 
   toggleAuthBtn.onclick = () => {
@@ -314,14 +324,10 @@
 
     try {
       if (isLoginMode) {
-        // Login
         await signInWithEmailAndPassword(auth, email, password);
       } else {
-        // Signup
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        // Update displayName (nickname)
         await updateProfile(userCredential.user, { displayName: nickname });
-        // Reload user to get updated profile
         await reload(userCredential.user);
       }
     } catch (e) {
@@ -342,13 +348,13 @@
       currentUser = user;
       authContainer.style.display = 'none';
       videoWrapper.style.display = 'block';
-      clearVideoUI();
+      renderVideo(null);
       listenForVideo();
     } else {
       currentUser = null;
       authContainer.style.display = 'block';
       videoWrapper.style.display = 'none';
-      clearVideoUI();
+      renderVideo(null);
     }
   });
 
@@ -396,19 +402,6 @@
       inputModal.classList.remove('active');
     } catch (e) {
       alert('Error saving video: ' + e.message);
-    }
-  });
-
-  clearBtn.addEventListener('click', async () => {
-    if (!currentVideoData) return;
-    if ((currentVideoData.user !== (currentUser.displayName || currentUser.email))) {
-      alert(`Only ${currentVideoData.user} can clear the video.`);
-      return;
-    }
-    try {
-      await remove(videoRef);
-    } catch (e) {
-      alert('Error clearing video: ' + e.message);
     }
   });
 </script>
