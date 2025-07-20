@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Clipboard History</title>
+  <title>Clipboard History Viewer</title>
   <style>
     body {
       font-family: sans-serif;
@@ -26,15 +26,20 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      word-break: break-all;
     }
-    .item button {
-      margin-left: 1rem;
+    .item:last-child {
+      border-bottom: none;
+    }
+    button {
+      padding: 5px 10px;
+      font-size: 0.9rem;
     }
   </style>
 </head>
 <body>
   <h1>📋 Clipboard History Viewer</h1>
-  <div class="history" id="history"></div>
+  <div class="history" id="history">Copy something to see it appear here.</div>
 
   <script>
     const historyDiv = document.getElementById('history');
@@ -54,18 +59,25 @@
 
     function renderHistory() {
       historyDiv.innerHTML = '';
+      if (historyList.length === 0) {
+        historyDiv.textContent = 'No clipboard history yet.';
+        return;
+      }
       historyList.forEach((item, index) => {
         const div = document.createElement('div');
         div.className = 'item';
-        div.innerHTML = `<span>${item}</span>
-          <button onclick="copyText('${encodeURIComponent(item)}')">Copy</button>`;
+
+        const span = document.createElement('span');
+        span.textContent = item;
+
+        const btn = document.createElement('button');
+        btn.textContent = 'Copy';
+        btn.onclick = () => navigator.clipboard.writeText(item);
+
+        div.appendChild(span);
+        div.appendChild(btn);
         historyDiv.appendChild(div);
       });
-    }
-
-    function copyText(encoded) {
-      const decoded = decodeURIComponent(encoded);
-      navigator.clipboard.writeText(decoded);
     }
   </script>
 </body>
