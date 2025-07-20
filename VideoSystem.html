@@ -1,409 +1,156 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Shared Video Player with Email Login & Nickname</title>
-<style>
-  /* same styles as before, omitted for brevity */
-  body {
-    font-family: Arial, sans-serif;
-    margin: 0; padding: 0;
-    background: #121212;
-    color: #eee;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: 100vh;
-  }
-  header {
-    width: 100%;
-    background: #222;
-    padding: 1rem;
-    font-size: 1.3rem;
-    font-weight: bold;
-    text-align: center;
-    box-sizing: border-box;
-  }
-  #auth-container, #video-container-wrapper {
-    margin: 1rem auto;
-    width: 90vw;
-    max-width: 420px;
-    background: #222;
-    padding: 1rem 1.5rem;
-    border-radius: 12px;
-    box-sizing: border-box;
-    text-align: center;
-  }
-  input[type=text], input[type=email], input[type=password] {
-    width: 100%;
-    padding: 0.6rem;
-    margin: 0.5rem 0;
-    border-radius: 6px;
-    border: none;
-    font-size: 1rem;
-    box-sizing: border-box;
-  }
-  button {
-    padding: 0.6rem 1rem;
-    margin: 0.5rem 0;
-    font-weight: bold;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    background: #007bff;
-    color: white;
-    width: 100%;
-    font-size: 1rem;
-    transition: background-color 0.2s;
-  }
-  button:hover:not(:disabled) {
-    background: #0056b3;
-  }
-  button:disabled {
-    background: #555;
-    cursor: not-allowed;
-  }
-  #toggle-auth {
-    background: transparent;
-    color: #4dabf7;
-    text-decoration: underline;
-    cursor: pointer;
-    font-weight: 600;
-    margin-top: 0.5rem;
-    border: none;
-    font-size: 0.95rem;
-  }
-  #status {
-    font-weight: bold;
-    margin-bottom: 1rem;
-  }
-  #video-container {
-    width: 100%;
-    height: 280px;
-    background: #000;
-    border-radius: 12px;
-    position: relative;
-    cursor: pointer;
-    user-select: none;
-    color: #666;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  iframe, video {
-    width: 100%;
-    height: 100%;
-    border-radius: 12px;
-  }
-  #video-placeholder {
-    color: #666;
-    font-size: 1rem;
-  }
-  #logout-btn {
-    margin-top: 0.5rem;
-    background: #444;
-  }
-  /* Input Modal */
-  #input-modal {
-    position: fixed;
-    top:0; left:0; right:0; bottom:0;
-    background: rgba(0,0,0,0.7);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 10;
-  }
-  #input-modal.active {
-    display: flex;
-  }
-  #input-box {
-    background: #222;
-    padding: 1rem 1.5rem;
-    border-radius: 12px;
-    width: 90vw;
-    max-width: 420px;
-    box-sizing: border-box;
-    color: #eee;
-  }
-  #input-box label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: bold;
-  }
-  #input-box input {
-    width: 100%;
-    padding: 0.5rem;
-    border-radius: 6px;
-    border: none;
-    margin-bottom: 1rem;
-    font-size: 1rem;
-    box-sizing: border-box;
-  }
-  #input-box button {
-    padding: 0.5rem 1rem;
-    font-weight: bold;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    background: #007bff;
-    color: white;
-  }
-  #input-box button.cancel {
-    background: #555;
-    margin-left: 1rem;
-  }
-</style>
+  <title>Sync Video Player</title>
+  <style>
+    body, html {
+      margin: 0; padding: 0;
+      font-family: sans-serif;
+      height: 100vh; width: 100vw;
+      display: flex; align-items: center; justify-content: center;
+      background-color: #111; color: white;
+    }
+    #login, #upload, #videoContainer {
+      display: none; flex-direction: column; gap: 10px;
+    }
+    #videoContainer {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: black; z-index: 9999; display: flex; justify-content: center; align-items: center;
+    }
+    video {
+      max-width: 100%; max-height: 100%;
+    }
+    #banner {
+      position: absolute; top: 10px; background: rgba(0,0,0,0.6); padding: 10px 20px; border-radius: 6px;
+      font-size: 1.2em;
+    }
+  </style>
 </head>
 <body>
-  <header>Shared Video Player</header>
 
-  <div id="auth-container">
-    <div id="auth-status">Please sign up or login</div>
-    <label for="nickname-input">Nickname (for signup only)</label>
-    <input type="text" id="nickname-input" placeholder="Nickname" autocomplete="off" />
-    <label for="email-input">Email</label>
-    <input type="email" id="email-input" placeholder="Email" autocomplete="off" />
-    <label for="password-input">Password</label>
-    <input type="password" id="password-input" placeholder="Password" autocomplete="off" />
-    <button id="auth-btn">Sign Up</button>
-    <button id="toggle-auth">Switch to Login</button>
-  </div>
+<div id="login">
+  <h2>Login</h2>
+  <input id="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Password">
+  <input id="nickname" placeholder="Nickname">
+  <button onclick="registerOrLogin()">Login / Register</button>
+</div>
 
-  <div id="video-container-wrapper" style="display:none;">
-    <div id="status">No video playing</div>
-    <div id="video-container" title="Click to set a video">
-      <div id="video-placeholder">Click here to play a video</div>
-    </div>
-    <!-- Clear button removed so users cannot clear -->
-    <button id="logout-btn">Logout</button>
-  </div>
+<div id="upload">
+  <h2>Video Share</h2>
+  <button onclick="selectSource()">Choose Video</button>
+  <p id="status"></p>
+</div>
 
-  <!-- Input Modal -->
-  <div id="input-modal">
-    <div id="input-box">
-      <label for="video-url">Enter video URL (YouTube or direct MP4 link):</label>
-      <input type="text" id="video-url" placeholder="https://..." />
-      <button id="submit-video">Play</button>
-      <button id="cancel-video" class="cancel">Cancel</button>
-    </div>
-  </div>
+<div id="videoContainer">
+  <div id="banner"></div>
+  <video id="sharedVideo" autoplay controls></video>
+</div>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-  import { 
-    getAuth, 
-    createUserWithEmailAndPassword, 
-    signInWithEmailAndPassword, 
-    signOut, 
-    onAuthStateChanged,
-    updateProfile,
-    reload
-  } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+<input type="file" id="fileInput" accept="video/*" style="display:none">
 
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+  // Firebase Init
   const firebaseConfig = {
     apiKey: "AIzaSyDrbDxPGImIwRZ2-eowHUblo1inrCgF_dA",
     authDomain: "project-videoshare.firebaseapp.com",
     projectId: "project-videoshare",
-    storageBucket: "project-videoshare.firebasestorage.app",
+    storageBucket: "project-videoshare.appspot.com",
     messagingSenderId: "464962603530",
     appId: "1:464962603530:web:95dab3da390beb5829adf3",
-    measurementId: "G-NTQWZK2NFK"
+    measurementId: "G-NTQWZK2NFK",
+    databaseURL: "https://project-videoshare-default-rtdb.firebaseio.com/"
   };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.database();
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getDatabase(app);
-  const videoRef = ref(db, 'currentVideo');
+  let nickname = "";
 
-  const authContainer = document.getElementById('auth-container');
-  const videoWrapper = document.getElementById('video-container-wrapper');
-  const statusHeader = document.getElementById('status');
-  const videoContainer = document.getElementById('video-container');
-  const videoPlaceholder = document.getElementById('video-placeholder');
-  const logoutBtn = document.getElementById('logout-btn');
-  const authStatus = document.getElementById('auth-status');
-
-  const inputModal = document.getElementById('input-modal');
-  const videoUrlInput = document.getElementById('video-url');
-  const submitVideoBtn = document.getElementById('submit-video');
-  const cancelVideoBtn = document.getElementById('cancel-video');
-
-  const nicknameInput = document.getElementById('nickname-input');
-  const emailInput = document.getElementById('email-input');
-  const passwordInput = document.getElementById('password-input');
-  const authBtn = document.getElementById('auth-btn');
-  const toggleAuthBtn = document.getElementById('toggle-auth');
-
-  let currentVideoData = null;
-  let currentUser = null;
-  let isLoginMode = false; // false = signup, true = login
-
-  // Improved parseVideoUrl: handle more YouTube URLs and direct mp4 links
-  function parseVideoUrl(url) {
-    // Normalize & parse common YouTube URLs
-    // Examples supported: 
-    // https://www.youtube.com/watch?v=VIDEO_ID
-    // https://youtu.be/VIDEO_ID
-    // https://youtube.com/watch?v=VIDEO_ID&other=params
-    let ytId = null;
-    try {
-      const u = new URL(url);
-      if (u.hostname.includes("youtube.com")) {
-        ytId = u.searchParams.get("v");
-      } else if (u.hostname === "youtu.be") {
-        ytId = u.pathname.slice(1);
-      }
-    } catch {
-      // invalid URL
-    }
-
-    if (ytId && ytId.length === 11) {
-      return { type: 'youtube', id: ytId };
-    }
-
-    // Check for direct MP4 link (simple check)
-    if (url.match(/^https?:\/\/.+\.mp4(\?.*)?$/i)) {
-      return { type: 'mp4', url };
-    }
-
-    return null;
-  }
-
-  function renderVideo(videoData) {
-    videoContainer.innerHTML = '';
-    if (!videoData) {
-      videoPlaceholder.textContent = 'Click here to play a video';
-      videoContainer.appendChild(videoPlaceholder);
-      statusHeader.textContent = 'No video playing';
-      return;
-    }
-    const { user, video } = videoData;
-    statusHeader.textContent = `${user} is playing ${video.type === 'youtube' ? 'a YouTube video' : video.url}`;
-
-    if (video.type === 'youtube') {
-      const iframe = document.createElement('iframe');
-      iframe.src = `https://www.youtube.com/embed/${video.id}?autoplay=1&mute=1&rel=0`;
-      iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
-      iframe.allowFullscreen = true;
-      videoContainer.appendChild(iframe);
-    } else if (video.type === 'mp4') {
-      const videoEl = document.createElement('video');
-      videoEl.src = video.url;
-      videoEl.controls = true;
-      videoEl.autoplay = true;
-      videoEl.muted = true; // mute to allow autoplay
-      videoContainer.appendChild(videoEl);
-    }
-  }
-
-  toggleAuthBtn.onclick = () => {
-    isLoginMode = !isLoginMode;
-    if (isLoginMode) {
-      authBtn.textContent = 'Login';
-      toggleAuthBtn.textContent = 'Switch to Sign Up';
-      nicknameInput.style.display = 'none';
-    } else {
-      authBtn.textContent = 'Sign Up';
-      toggleAuthBtn.textContent = 'Switch to Login';
-      nicknameInput.style.display = 'block';
-    }
-    authStatus.textContent = isLoginMode ? 'Please login' : 'Please sign up or login';
-  };
-
-  authBtn.onclick = async () => {
-    const email = emailInput.value.trim();
+  function registerOrLogin() {
+    const email = emailInput.value;
     const password = passwordInput.value;
-    const nickname = nicknameInput.value.trim();
+    nickname = nicknameInput.value || "Unknown";
 
-    if (!email || !password || (!isLoginMode && !nickname)) {
-      alert('Please fill all required fields.');
-      return;
-    }
+    auth.signInWithEmailAndPassword(email, password)
+      .catch(() => auth.createUserWithEmailAndPassword(email, password))
+      .then(() => {
+        login.style.display = 'none';
+        upload.style.display = 'flex';
+        watchForVideo();
+      });
+  }
 
-    try {
-      if (isLoginMode) {
-        await signInWithEmailAndPassword(auth, email, password);
-      } else {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        await updateProfile(userCredential.user, { displayName: nickname });
-        await reload(userCredential.user);
-      }
-    } catch (e) {
-      alert('Error: ' + e.message);
-    }
-  };
+  function selectSource() {
+    const url = prompt("Enter video URL or type 'file' to upload:");
+    if (!url) return;
 
-  logoutBtn.onclick = async () => {
-    try {
-      await signOut(auth);
-    } catch (e) {
-      alert('Logout failed: ' + e.message);
-    }
-  };
-
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      currentUser = user;
-      authContainer.style.display = 'none';
-      videoWrapper.style.display = 'block';
-      renderVideo(null);
-      listenForVideo();
+    if (url.toLowerCase() === "file") {
+      fileInput.click();
     } else {
-      currentUser = null;
-      authContainer.style.display = 'block';
-      videoWrapper.style.display = 'none';
-      renderVideo(null);
+      uploadVideo(url, "External Link");
     }
-  });
+  }
 
-  function listenForVideo() {
-    onValue(videoRef, (snapshot) => {
-      currentVideoData = snapshot.val();
-      renderVideo(currentVideoData);
+  fileInput.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      uploadVideo(reader.result, file.name);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  function uploadVideo(src, name) {
+    db.ref("currentVideo").once("value").then(snap => {
+      if (snap.exists()) {
+        status.textContent = "Video already playing!";
+        return;
+      }
+
+      db.ref("currentVideo").set({
+        src: src,
+        name: name,
+        by: nickname
+      });
     });
   }
 
-  videoContainer.addEventListener('click', () => {
-    if (!currentUser) {
-      alert('You must be logged in to set a video.');
-      return;
-    }
-    if (currentVideoData) {
-      alert(`Currently playing by ${currentVideoData.user}. Please wait until cleared.`);
-      return;
-    }
-    inputModal.classList.add('active');
-    videoUrlInput.value = '';
-    videoUrlInput.focus();
-  });
+  function watchForVideo() {
+    db.ref("currentVideo").on("value", snap => {
+      const data = snap.val();
+      if (!data) {
+        videoContainer.style.display = "none";
+        sharedVideo.pause();
+        sharedVideo.src = "";
+        return;
+      }
 
-  cancelVideoBtn.addEventListener('click', () => {
-    inputModal.classList.remove('active');
-  });
+      banner.textContent = `${data.by} is playing ${data.name}`;
+      sharedVideo.src = data.src;
+      videoContainer.style.display = "flex";
+      sharedVideo.play();
+    });
+  }
 
-  submitVideoBtn.addEventListener('click', async () => {
-    const url = videoUrlInput.value.trim();
-    if (!url) {
-      alert('Please enter a video URL.');
-      return;
-    }
-    const parsed = parseVideoUrl(url);
-    if (!parsed) {
-      alert('Only YouTube links or direct MP4 links allowed.');
-      return;
-    }
-    try {
-      await set(videoRef, {
-        user: currentUser.displayName || currentUser.email,
-        video: parsed
-      });
-      inputModal.classList.remove('active');
-    } catch (e) {
-      alert('Error saving video: ' + e.message);
-    }
-  });
+  const emailInput = document.getElementById("email");
+  const passwordInput = document.getElementById("password");
+  const nicknameInput = document.getElementById("nickname");
+  const login = document.getElementById("login");
+  const upload = document.getElementById("upload");
+  const fileInput = document.getElementById("fileInput");
+  const sharedVideo = document.getElementById("sharedVideo");
+  const videoContainer = document.getElementById("videoContainer");
+  const status = document.getElementById("status");
+  const banner = document.getElementById("banner");
+
+  login.style.display = "flex";
 </script>
 
 </body>
