@@ -5,14 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>HTTP Header Viewer & Request Tester</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
   :root {
     --bg: #f9fafb;
     --text: #222;
     --accent: #3b82f6;
     --input-bg: #fff;
-    --border: #ccc;
+    --border: #d1d5db;
     --error: #ef4444;
     --success: #10b981;
+    --shadow: rgba(0, 0, 0, 0.12);
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -20,117 +23,177 @@
       --text: #eee;
       --accent: #60a5fa;
       --input-bg: #1f1f1f;
-      --border: #444;
+      --border: #374151;
       --error: #f87171;
       --success: #34d399;
+      --shadow: rgba(0, 0, 0, 0.8);
     }
   }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
   body {
-    margin: 0; padding: 1rem;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0; padding: 2rem;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+      Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     background-color: var(--bg);
     color: var(--text);
     min-height: 100vh;
-    display: flex; flex-direction: column; align-items: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
+
   h1 {
-    margin-bottom: 1rem;
+    font-weight: 700;
+    font-size: 2.25rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    user-select: none;
+    text-shadow: 0 1px 4px var(--shadow);
   }
+
   form {
     width: 100%;
     max-width: 720px;
     background: var(--input-bg);
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 1rem;
-    box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
-    margin-bottom: 1rem;
+    border-radius: 12px;
+    padding: 1.5rem 2rem;
+    box-shadow: 0 6px 16px var(--shadow);
+    margin-bottom: 2rem;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
   }
+
   label {
     display: block;
-    margin-top: 1rem;
+    margin-top: 1.25rem;
     font-weight: 600;
-  }
-  input[type="text"], input[type="url"], select, textarea {
-    width: 100%;
-    padding: 0.5rem;
-    margin-top: 0.25rem;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    background: var(--input-bg);
+    font-size: 1.1rem;
     color: var(--text);
-    font-family: monospace, monospace;
-    font-size: 1rem;
+    user-select: none;
   }
+
+  input[type="url"],
+  select,
   textarea {
-    resize: vertical;
-    min-height: 80px;
-  }
-  button {
-    margin-top: 1.5rem;
-    padding: 0.75rem 1.5rem;
-    border: none;
+    width: 100%;
+    margin-top: 0.5rem;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    font-family: monospace, monospace;
+    color: var(--text);
+    background: var(--input-bg);
+    border: 1.5px solid var(--border);
     border-radius: 8px;
-    background-color: var(--accent);
+    outline-offset: 2px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    resize: vertical;
+    min-height: 90px;
+  }
+  input[type="url"]:focus,
+  select:focus,
+  textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 6px var(--accent);
+  }
+
+  select {
+    height: 40px;
+    font-family: inherit;
+  }
+
+  button {
+    margin-top: 2rem;
+    padding: 0.9rem 2rem;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
     color: white;
     font-weight: 700;
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    user-select: none;
+    transition: background 0.3s ease, transform 0.15s ease;
+    box-shadow: 0 6px 12px rgba(59, 130, 246, 0.5);
   }
   button:hover:not(:disabled) {
-    background-color: #2563eb;
+    background: linear-gradient(135deg, #1d4ed8, #2563eb);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(37, 99, 235, 0.6);
+  }
+  button:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.4);
   }
   button:disabled {
     background-color: #93c5fd;
     cursor: not-allowed;
+    box-shadow: none;
   }
+
+  #status-message {
+    margin-top: 1.2rem;
+    font-weight: 700;
+    font-size: 1rem;
+    min-height: 24px;
+    user-select: none;
+    transition: color 0.3s ease;
+  }
+
+  .error {
+    color: var(--error);
+  }
+  .success {
+    color: var(--success);
+  }
+
   .result {
     width: 100%;
     max-width: 720px;
     background: var(--input-bg);
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 1rem;
-    box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    box-shadow: 0 6px 16px var(--shadow);
     overflow-wrap: break-word;
     white-space: pre-wrap;
     font-family: monospace, monospace;
-    font-size: 0.9rem;
+    font-size: 1rem;
     margin-bottom: 2rem;
+    user-select: text;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
   }
+
   .headers {
-    margin-top: 0.5rem;
-    max-height: 200px;
+    max-height: 220px;
     overflow-y: auto;
     border-top: 1px solid var(--border);
-    padding-top: 0.5rem;
+    padding-top: 0.75rem;
   }
+
   .header-item {
-    margin-bottom: 0.25rem;
-  }
-  .error {
-    color: var(--error);
-    font-weight: 700;
-    margin-top: 1rem;
-  }
-  .success {
-    color: var(--success);
-    font-weight: 700;
-    margin-top: 1rem;
+    margin-bottom: 0.35rem;
   }
 </style>
 </head>
 <body>
 
-<h1>HTTP Header Viewer & Request Tester</h1>
+<h1>HTTP Header Viewer &amp; Request Tester</h1>
 
-<form id="request-form">
+<form id="request-form" autocomplete="off" spellcheck="false">
   <label for="url">Request URL</label>
-  <input type="url" id="url" placeholder="https://api.example.com/data" required />
+  <input type="url" id="url" placeholder="https://api.example.com/data" required autofocus />
 
   <label for="method">HTTP Method</label>
-  <select id="method">
+  <select id="method" aria-label="HTTP Method">
     <option>GET</option>
     <option>POST</option>
     <option>PUT</option>
@@ -141,18 +204,18 @@
   </select>
 
   <label for="headers">Custom Headers (JSON format)</label>
-  <textarea id="headers" placeholder='{"Authorization": "Bearer token", "X-Custom-Header": "value"}'></textarea>
+  <textarea id="headers" placeholder='{"Authorization": "Bearer token", "X-Custom-Header": "value"}' aria-label="Custom Headers"></textarea>
 
   <label for="body">Request Body (for POST, PUT, PATCH)</label>
-  <textarea id="body" placeholder='{"key":"value"}'></textarea>
+  <textarea id="body" placeholder='{"key":"value"}' aria-label="Request Body"></textarea>
 
-  <button type="submit">Send Request</button>
-  <div id="status-message"></div>
+  <button type="submit" aria-live="polite" aria-busy="false">Send Request</button>
+  <div id="status-message" role="status" aria-live="polite"></div>
 </form>
 
-<div class="result" id="response-status"></div>
-<div class="result" id="response-headers"></div>
-<div class="result" id="response-body"></div>
+<div class="result" id="response-status" aria-live="polite"></div>
+<div class="result" id="response-headers" aria-live="polite"></div>
+<div class="result" id="response-body" aria-live="polite"></div>
 
 <script>
   const form = document.getElementById('request-form');
@@ -160,6 +223,7 @@
   const responseHeaders = document.getElementById('response-headers');
   const responseBody = document.getElementById('response-body');
   const statusMessage = document.getElementById('status-message');
+  const submitBtn = form.querySelector('button[type="submit"]');
 
   function formatHeaders(headers) {
     let result = '';
@@ -185,6 +249,8 @@
     responseBody.textContent = '';
     statusMessage.textContent = '';
     statusMessage.className = '';
+    submitBtn.disabled = true;
+    submitBtn.setAttribute('aria-busy', 'true');
 
     const url = document.getElementById('url').value.trim();
     const method = document.getElementById('method').value;
@@ -194,6 +260,8 @@
     if (!url) {
       statusMessage.textContent = 'Please enter a valid URL.';
       statusMessage.className = 'error';
+      submitBtn.disabled = false;
+      submitBtn.setAttribute('aria-busy', 'false');
       return;
     }
 
@@ -205,6 +273,8 @@
       } catch {
         statusMessage.textContent = 'Headers must be a valid JSON object.';
         statusMessage.className = 'error';
+        submitBtn.disabled = false;
+        submitBtn.setAttribute('aria-busy', 'false');
         return;
       }
     }
@@ -231,7 +301,6 @@
 
       let text = await response.text();
 
-      // Try to pretty print JSON if possible
       responseBody.textContent = tryParseJSON(text);
 
       statusMessage.textContent = 'Request completed successfully.';
@@ -239,6 +308,9 @@
     } catch (err) {
       statusMessage.textContent = 'Error: ' + err.message;
       statusMessage.className = 'error';
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.setAttribute('aria-busy', 'false');
     }
   });
 </script>
