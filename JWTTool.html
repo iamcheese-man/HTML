@@ -1,275 +1,318 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>JWT Tool</title>
-<style>
-  body {
-    background: #121212;
-    color: #eee;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    padding: 2rem;
-    max-width: 700px;
-    margin: auto;
-  }
-  h1 {
-    text-align: center;
-    margin-bottom: 1rem;
-  }
-  label {
-    margin-top: 1rem;
-    font-weight: bold;
-    display: block;
-  }
-  textarea, input[type=text] {
-    width: 100%;
-    background: #222;
-    border: none;
-    border-radius: 6px;
-    color: #eee;
-    font-family: monospace;
-    font-size: 1rem;
-    padding: 0.5rem;
-    margin-top: 0.25rem;
-  }
-  textarea {
-    min-height: 80px;
-    resize: vertical;
-  }
-  button {
-    margin-top: 1rem;
-    padding: 0.75rem 1.5rem;
-    background: #007acc;
-    border: none;
-    border-radius: 6px;
-    color: white;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 1rem;
-  }
-  button:hover {
-    background: #005fa3;
-  }
-  pre {
-    background: #222;
-    border-radius: 6px;
-    padding: 1rem;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    margin-top: 0.5rem;
-    font-family: monospace;
-    font-size: 0.9rem;
-  }
-  .error {
-    color: #ff4c4c;
-    margin-top: 0.5rem;
-    font-weight: bold;
-  }
-  .success {
-    color: #4caf50;
-    margin-top: 0.5rem;
-    font-weight: bold;
-  }
-  .section {
-    margin-bottom: 2rem;
-  }
-</style>
-</head>
-<body>
+  <meta charset="UTF-8" />
+  <title>JWT Toolbox</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #111111;
+      --input-bg: #f4f4f4;
+      --input-border: #cccccc;
+      --pre-bg: #eeeeee;
+      --success: #007700;
+      --danger: #cc0000;
+    }
 
-<h1>All-in-One JWT Tool</h1>
+    body.dark {
+      --bg: #121212;
+      --text: #eeeeee;
+      --input-bg: #222222;
+      --input-border: #444444;
+      --pre-bg: #1a1a1a;
+      --success: #4caf50;
+      --danger: #ff4c4c;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: monospace;
+      max-width: 800px;
+      margin: auto;
+      padding: 2rem;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    textarea, input, button {
+      width: 100%;
+      margin: 0.5rem 0;
+      padding: 0.6rem;
+      font-size: 1rem;
+      background: var(--input-bg);
+      color: var(--text);
+      border: 1px solid var(--input-border);
+      border-radius: 5px;
+      transition: background 0.3s, color 0.3s;
+      font-family: monospace;
+    }
+
+    button {
+      background: #0066cc;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    button:hover {
+      background: #004999;
+    }
+
+    pre {
+      background: var(--pre-bg);
+      padding: 1rem;
+      border-radius: 5px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: monospace;
+      margin-top: 0.5rem;
+    }
+
+    .section {
+      border-bottom: 1px solid var(--input-border);
+      padding-bottom: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .danger {
+      color: var(--danger);
+      font-weight: bold;
+    }
+
+    .success {
+      color: var(--success);
+      font-weight: bold;
+    }
+
+    #themeToggle {
+      float: right;
+      margin-top: -1rem;
+      margin-bottom: 1rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+      user-select: none;
+    }
+  </style>
+</head>
+<body class="dark">
+
+<h1>
+  JWT Tool
+  <span id="themeToggle" title="Toggle light/dark theme">🌙 Toggle Theme</span>
+</h1>
 
 <div class="section">
-  <label for="jwtInput">Paste JWT to Decode & Verify:</label>
-  <textarea id="jwtInput" placeholder="Paste JWT here..."></textarea>
-  <label for="verifySecret">Secret for Signature Verification (HS256):</label>
-  <input type="text" id="verifySecret" placeholder="Enter secret key (optional)" />
-  <button id="decodeBtn">Decode & Verify</button>
-  <div id="decodeError" class="error"></div>
-  <pre id="decodedHeader"></pre>
-  <pre id="decodedPayload"></pre>
-  <pre id="decodedSignature"></pre>
-  <div id="verifyResult"></div>
+  <label>Paste JWT:</label>
+  <textarea id="jwtInput" placeholder="Paste token here..."></textarea>
+  <label>Verify with Secret or Public Key:</label>
+  <textarea id="verifyKey" placeholder="HS256: secret OR RS256: public PEM"></textarea>
+  <button onclick="decodeAndVerify()">Decode & Verify</button>
+  <div id="decodeResult"></div>
 </div>
 
-<hr />
+<div class="section">
+  <label>JWT Header (JSON):</label>
+  <textarea id="jwtHeader">{ "alg": "HS256", "typ": "JWT" }</textarea>
+  <label>JWT Payload (JSON):</label>
+  <textarea id="jwtPayload">{ "sub": "123", "name": "Alice", "iat": 1516239022 }</textarea>
+  <label>Sign with Secret or Private Key:</label>
+  <textarea id="signKey" placeholder="HS256: secret (RS256 unsupported in browser)"></textarea>
+  <button onclick="encodeJWT()">Encode</button>
+  <div id="encodeResult"></div>
+</div>
 
 <div class="section">
-  <label for="encodeHeader">Encode JWT - Header (JSON):</label>
-  <textarea id="encodeHeader">{ "alg": "HS256", "typ": "JWT" }</textarea>
-
-  <label for="encodePayload">Payload (JSON):</label>
-  <textarea id="encodePayload">{ "sub": "1234567890", "name": "John Doe", "iat": 1516239022 }</textarea>
-
-  <label for="encodeSecret">Secret for Signature (HS256):</label>
-  <input type="text" id="encodeSecret" placeholder="Enter secret key" />
-
-  <button id="encodeBtn">Encode JWT</button>
-  <div id="encodeError" class="error"></div>
-  <div id="encodedResult" class="success" style="word-break: break-word; margin-top: 0.5rem;"></div>
+  <button onclick="importFromClipboard()">📋 Paste from Clipboard</button>
+  <button onclick="exportToClipboard()">📤 Copy to Clipboard</button>
+  <button onclick="importFromFile()">📂 Load Token from File</button>
+  <input type="file" id="fileInput" style="display:none;" />
+  <button onclick="generateFake()">🎲 Generate Fake JWT</button>
 </div>
 
 <script>
+  const jwtInput = document.getElementById("jwtInput");
+  const verifyKey = document.getElementById("verifyKey");
+  const jwtHeader = document.getElementById("jwtHeader");
+  const jwtPayload = document.getElementById("jwtPayload");
+  const signKey = document.getElementById("signKey");
+  const encodeResult = document.getElementById("encodeResult");
+  const decodeResult = document.getElementById("decodeResult");
+  const themeToggle = document.getElementById("themeToggle");
+  const fileInput = document.getElementById("fileInput");
+
   // Base64URL encode/decode helpers
-  function base64UrlEncode(str) {
-    return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  }
-  function base64UrlDecode(str) {
-    // Pad string length to multiple of 4
-    str = str.replace(/-/g, '+').replace(/_/g, '/');
-    while (str.length % 4) {
-      str += '=';
+  const base64Url = {
+    encode: str => btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""),
+    decode: str => {
+      str = str.replace(/-/g, "+").replace(/_/g, "/");
+      while (str.length % 4) str += "=";
+      return atob(str);
     }
-    return atob(str);
-  }
+  };
 
-  // Convert string to Uint8Array
-  function strToUint8Array(str) {
-    const arr = new Uint8Array(str.length);
-    for(let i=0; i < str.length; i++) arr[i] = str.charCodeAt(i);
-    return arr;
-  }
-
-  // Convert ArrayBuffer to base64url
-  function arrayBufferToBase64Url(buffer) {
-    const bytes = new Uint8Array(buffer);
-    let binary = '';
-    for (let i=0; i<bytes.byteLength; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    return base64UrlEncode(binary);
-  }
-
-  // SHA-256 HMAC sign using Web Crypto API, returns Promise<string> base64url signature
-  async function hmacSign(secret, data) {
-    const key = await crypto.subtle.importKey(
-      "raw",
-      strToUint8Array(secret),
-      {name: "HMAC", hash: {name: "SHA-256"}},
-      false,
-      ["sign"]
-    );
-    const signature = await crypto.subtle.sign("HMAC", key, strToUint8Array(data));
-    return arrayBufferToBase64Url(signature);
-  }
-
-  // Decode JWT
-  function decodeJWT(token) {
-    const parts = token.split('.');
-    if (parts.length !== 3) throw new Error('Invalid JWT format: should have 3 parts');
-    const header = JSON.parse(base64UrlDecode(parts[0]));
-    const payload = JSON.parse(base64UrlDecode(parts[1]));
-    const signature = parts[2];
-    return {header, payload, signature, unsigned: parts[0] + '.' + parts[1]};
-  }
-
-  // Show decoded JSON prettily
-  function prettyPrintJSON(obj) {
+  function pretty(obj) {
     return JSON.stringify(obj, null, 2);
   }
 
-  // Verify JWT HS256 signature
-  async function verifyJWT(token, secret) {
-    if (!secret) return null; // no secret = can't verify
-    const {signature, unsigned} = decodeJWT(token);
-    const expectedSig = await hmacSign(secret, unsigned);
-    return expectedSig === signature;
+  async function hmacSha256(key, data) {
+    const enc = new TextEncoder();
+    const cryptoKey = await crypto.subtle.importKey(
+      "raw",
+      enc.encode(key),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+    const sig = await crypto.subtle.sign("HMAC", cryptoKey, enc.encode(data));
+    return base64Url.encode(String.fromCharCode(...new Uint8Array(sig)));
   }
 
-  // Encode JWT
-  async function encodeJWT(header, payload, secret) {
-    const headerStr = JSON.stringify(header);
-    const payloadStr = JSON.stringify(payload);
-    const encodedHeader = base64UrlEncode(headerStr);
-    const encodedPayload = base64UrlEncode(payloadStr);
-    const unsigned = `${encodedHeader}.${encodedPayload}`;
-    if (!secret) throw new Error("Secret is required for signing");
-    const signature = await hmacSign(secret, unsigned);
-    return `${unsigned}.${signature}`;
+  async function importPemKey(pem) {
+    const clean = pem.replace(/-----(BEGIN|END)[\s\S]+?-----/g, "").replace(/\s+/g, "");
+    const bin = Uint8Array.from(atob(clean), c => c.charCodeAt(0));
+    return await crypto.subtle.importKey(
+      "spki",
+      bin.buffer,
+      { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+      false,
+      ["verify"]
+    );
   }
 
-  // Elements
-  const jwtInput = document.getElementById('jwtInput');
-  const verifySecret = document.getElementById('verifySecret');
-  const decodeBtn = document.getElementById('decodeBtn');
-  const decodeError = document.getElementById('decodeError');
-  const decodedHeader = document.getElementById('decodedHeader');
-  const decodedPayload = document.getElementById('decodedPayload');
-  const decodedSignature = document.getElementById('decodedSignature');
-  const verifyResult = document.getElementById('verifyResult');
-
-  const encodeHeader = document.getElementById('encodeHeader');
-  const encodePayload = document.getElementById('encodePayload');
-  const encodeSecret = document.getElementById('encodeSecret');
-  const encodeBtn = document.getElementById('encodeBtn');
-  const encodeError = document.getElementById('encodeError');
-  const encodedResult = document.getElementById('encodedResult');
-
-  decodeBtn.onclick = async () => {
-    decodeError.textContent = '';
-    verifyResult.textContent = '';
-    decodedHeader.textContent = '';
-    decodedPayload.textContent = '';
-    decodedSignature.textContent = '';
-
-    const token = jwtInput.value.trim();
-    if (!token) {
-      decodeError.textContent = 'Please paste a JWT token.';
-      return;
-    }
+  async function decodeAndVerify() {
+    decodeResult.innerHTML = "";
     try {
-      const {header, payload, signature} = decodeJWT(token);
-      decodedHeader.textContent = 'Header:\n' + prettyPrintJSON(header);
-      decodedPayload.textContent = 'Payload:\n' + prettyPrintJSON(payload);
-      decodedSignature.textContent = 'Signature:\n' + signature;
+      const [head64, payload64, sig] = jwtInput.value.trim().split(".");
+      if (!head64 || !payload64 || !sig) throw new Error("Invalid JWT format");
+      const header = JSON.parse(base64Url.decode(head64));
+      const payload = JSON.parse(base64Url.decode(payload64));
+      const unsigned = `${head64}.${payload64}`;
+      let valid = false;
 
-      const secret = verifySecret.value.trim();
-      if (secret) {
-        const valid = await verifyJWT(token, secret);
-        verifyResult.textContent = valid
-          ? 'Signature is VALID ✅'
-          : 'Signature is INVALID ❌';
-        verifyResult.style.color = valid ? '#4caf50' : '#ff4c4c';
-      } else {
-        verifyResult.textContent = 'No secret provided. Signature verification skipped.';
-        verifyResult.style.color = '#aaa';
+      if (header.alg === "HS256") {
+        const expected = await hmacSha256(verifyKey.value, unsigned);
+        valid = (expected === sig);
+      } else if (header.alg === "RS256") {
+        const pubKey = await importPemKey(verifyKey.value);
+        const sigBuf = Uint8Array.from(atob(sig.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+        valid = await crypto.subtle.verify(
+          "RSASSA-PKCS1-v1_5",
+          pubKey,
+          sigBuf,
+          new TextEncoder().encode(unsigned)
+        );
       }
-    } catch (err) {
-      decodeError.textContent = 'Error decoding JWT: ' + err.message;
+
+      const now = Math.floor(Date.now() / 1000);
+      let expInfo = "⏳ No expiration";
+      if (payload.exp) {
+        const diff = payload.exp - now;
+        if (diff > 0) {
+          expInfo = `⏰ Expires in: ${diff} seconds`;
+        } else {
+          expInfo = `⏰ Expired ${-diff} seconds ago`;
+        }
+      }
+
+      decodeResult.innerHTML = `
+        <pre>Header:\n${pretty(header)}</pre>
+        <pre>Payload:\n${pretty(payload)}</pre>
+        <div class="${valid ? 'success' : 'danger'}">Signature ${valid ? "VALID ✅" : "INVALID ❌"}</div>
+        <div>${expInfo}</div>
+      `;
+    } catch (e) {
+      decodeResult.innerHTML = `<div class="danger">Error: ${e.message}</div>`;
+    }
+  }
+
+  async function encodeJWT() {
+    encodeResult.innerHTML = "";
+    try {
+      const header = JSON.parse(jwtHeader.value);
+      const payload = JSON.parse(jwtPayload.value);
+      const head64 = base64Url.encode(JSON.stringify(header));
+      const payload64 = base64Url.encode(JSON.stringify(payload));
+      const unsigned = `${head64}.${payload64}`;
+      let sig = "";
+
+      if (header.alg === "HS256") {
+        sig = await hmacSha256(signKey.value, unsigned);
+      } else if (header.alg === "RS256") {
+        encodeResult.innerHTML = `<div class="danger">RS256 encoding not supported in browser.</div>`;
+        return;
+      } else {
+        encodeResult.innerHTML = `<div class="danger">Unsupported algorithm: ${header.alg}</div>`;
+        return;
+      }
+
+      encodeResult.innerHTML = `<pre>${unsigned}.${sig}</pre>`;
+    } catch (e) {
+      encodeResult.innerHTML = `<div class="danger">Encoding failed: ${e.message}</div>`;
+    }
+  }
+
+  function generateFake() {
+    const fakeHeader = { alg: "HS256", typ: "JWT" };
+    const fakePayload = { sub: "123", exp: Math.floor(Date.now() / 1000) + 60 };
+    jwtInput.value =
+      base64Url.encode(JSON.stringify(fakeHeader)) + "." +
+      base64Url.encode(JSON.stringify(fakePayload)) + "." +
+      "fakeSIG";
+    decodeResult.innerHTML = `<div class="success">🎲 Fake token generated!</div>`;
+  }
+
+  async function importFromClipboard() {
+    try {
+      const text = await navigator.clipboard.readText();
+      jwtInput.value = text;
+    } catch {
+      alert("Failed to read from clipboard.");
+    }
+  }
+
+  async function exportToClipboard() {
+    try {
+      const token = encodeResult.textContent.trim();
+      if (!token) {
+        alert("Nothing to copy!");
+        return;
+      }
+      await navigator.clipboard.writeText(token);
+      alert("Copied encoded token to clipboard.");
+    } catch {
+      alert("Failed to copy to clipboard.");
+    }
+  }
+
+  function importFromFile() {
+    fileInput.onchange = () => {
+      if (fileInput.files.length === 0) return;
+      const reader = new FileReader();
+      reader.onload = () => jwtInput.value = reader.result;
+      reader.readAsText(fileInput.files[0]);
+    };
+    fileInput.click();
+  }
+
+  // Theme toggle logic
+  themeToggle.onclick = () => {
+    if (document.body.classList.contains("dark")) {
+      document.body.classList.remove("dark");
+      document.body.classList.add("light");
+      themeToggle.textContent = "☀️ Toggle Theme";
+    } else {
+      document.body.classList.remove("light");
+      document.body.classList.add("dark");
+      themeToggle.textContent = "🌙 Toggle Theme";
     }
   };
 
-  encodeBtn.onclick = async () => {
-    encodeError.textContent = '';
-    encodedResult.textContent = '';
-
-    let header, payload;
-    try {
-      header = JSON.parse(encodeHeader.value);
-    } catch {
-      encodeError.textContent = 'Invalid JSON in header.';
-      return;
-    }
-    try {
-      payload = JSON.parse(encodePayload.value);
-    } catch {
-      encodeError.textContent = 'Invalid JSON in payload.';
-      return;
-    }
-    const secret = encodeSecret.value.trim();
-    if (!secret) {
-      encodeError.textContent = 'Secret is required for signing.';
-      return;
-    }
-
-    try {
-      const token = await encodeJWT(header, payload, secret);
-      encodedResult.textContent = token;
-    } catch (err) {
-      encodeError.textContent = 'Error encoding JWT: ' + err.message;
-    }
-  };
+  // Default theme
+  if (!document.body.classList.contains("dark") && !document.body.classList.contains("light")) {
+    document.body.classList.add("dark");
+  }
 </script>
 
 </body>
