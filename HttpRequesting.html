@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>HTTP Header Viewer & Request Tester</title>
+<title>HTTP Header Viewer & Request Tester with History</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
@@ -41,9 +41,6 @@
     background-color: var(--bg);
     color: var(--text);
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -68,7 +65,7 @@
     border-radius: 12px;
     padding: 1.5rem 2rem;
     box-shadow: 0 6px 16px var(--shadow);
-    margin-bottom: 2rem;
+    margin: 0 auto 2rem;
     transition: background-color 0.3s ease, border-color 0.3s ease;
   }
 
@@ -167,20 +164,68 @@
     white-space: pre-wrap;
     font-family: monospace, monospace;
     font-size: 1rem;
-    margin-bottom: 2rem;
+    margin: 0 auto 2rem;
     user-select: text;
     transition: background-color 0.3s ease, border-color 0.3s ease;
   }
 
-  .headers {
-    max-height: 220px;
-    overflow-y: auto;
-    border-top: 1px solid var(--border);
-    padding-top: 0.75rem;
+  /* History below results */
+  #history-section {
+    max-width: 720px;
+    margin: 0 auto;
   }
 
-  .header-item {
-    margin-bottom: 0.35rem;
+  #history-section h2 {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+    user-select: none;
+  }
+
+  #history-list {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--input-bg);
+    box-shadow: 0 4px 12px var(--shadow);
+    font-family: monospace, monospace;
+    font-size: 0.9rem;
+  }
+
+  #history-list li {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+  #history-list li:last-child {
+    border-bottom: none;
+  }
+  #history-list li:hover,
+  #history-list li:focus {
+    background-color: var(--accent);
+    color: #fff;
+    outline: none;
+  }
+
+  #clear-history {
+    margin-top: 0.75rem;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 8px;
+    background: var(--error);
+    color: #fff;
+    cursor: pointer;
+    font-weight: 700;
+    user-select: none;
+    transition: background-color 0.3s ease;
+  }
+  #clear-history:hover {
+    background: #dc2626;
   }
 </style>
 </head>
@@ -217,6 +262,12 @@
 <div class="result" id="response-headers" aria-live="polite"></div>
 <div class="result" id="response-body" aria-live="polite"></div>
 
+<section id="history-section" aria-label="Request History">
+  <h2>Request History</h2>
+  <ul id="history-list" tabindex="0"></ul>
+  <button id="clear-history" aria-label="Clear Request History">Clear History</button>
+</section>
+
 <script>
   const form = document.getElementById('request-form');
   const responseStatus = document.getElementById('response-status');
@@ -224,6 +275,10 @@
   const responseBody = document.getElementById('response-body');
   const statusMessage = document.getElementById('status-message');
   const submitBtn = form.querySelector('button[type="submit"]');
+  const historyList = document.getElementById('history-list');
+  const clearHistoryBtn = document.getElementById('clear-history');
+
+  const HISTORY_KEY = 'http-request-tester-history';
 
   function formatHeaders(headers) {
     let result = '';
@@ -240,6 +295,67 @@
       return text;
     }
   }
+
+  function saveRequestToHistory(request) {
+    let history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+
+    // Remove exact duplicate if exists
+    history = history.filter(item => JSON.stringify(item) !== JSON.stringify(request));
+
+    // Add new request at front
+    history.unshift(request);
+
+    // No limit on history size
+
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    renderHistory();
+  }
+
+  function renderHistory() {
+    let history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+    historyList.innerHTML = '';
+    if (history.length === 0) {
+      const li = document.createElement('li');
+      li.textContent = 'No history yet.';
+      li.style.fontStyle = 'italic';
+      li.style.color = 'gray';
+      historyList.appendChild(li);
+      return;
+    }
+
+    history.forEach((req, index) => {
+      const li = document.createElement('li');
+      li.textContent = `[${req.method}] ${req.url}`;
+      li.title = `Method: ${req.method}\nHeaders: ${JSON.stringify(req.headers)}\nBody: ${req.body}`;
+      li.tabIndex = 0;
+
+      li.addEventListener('click', () => {
+        // Load history item into form
+        document.getElementById('url').value = req.url;
+        document.getElementById('method').value = req.method;
+        document.getElementById('headers').value = JSON.stringify(req.headers, null, 2);
+        document.getElementById('body').value = req.body || '';
+        statusMessage.textContent = `Loaded request from history (#${index + 1})`;
+        statusMessage.className = '';
+      });
+
+      li.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          li.click();
+        }
+      });
+
+      historyList.appendChild(li);
+    });
+  }
+
+  clearHistoryBtn.addEventListener('click', () => {
+    localStorage.removeItem(HISTORY_KEY);
+    renderHistory();
+    statusMessage.textContent = 'Request history cleared.';
+    statusMessage.className = 'success';
+  });
 
   form.addEventListener('submit', async e => {
     e.preventDefault();
@@ -305,6 +421,14 @@
 
       statusMessage.textContent = 'Request completed successfully.';
       statusMessage.className = 'success';
+
+      // Save to history
+      saveRequestToHistory({
+        url,
+        method,
+        headers,
+        body: bodyRaw
+      });
     } catch (err) {
       statusMessage.textContent = 'Error: ' + err.message;
       statusMessage.className = 'error';
@@ -313,6 +437,9 @@
       submitBtn.setAttribute('aria-busy', 'false');
     }
   });
+
+  // Initial render of history on page load
+  renderHistory();
 </script>
 
 </body>
