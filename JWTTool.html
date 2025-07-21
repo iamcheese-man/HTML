@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>JWT Tool</title>
+<style>
+  body {
+    background: #121212;
+    color: #eee;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 2rem;
+    max-width: 700px;
+    margin: auto;
+  }
+  h1 {
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  label {
+    margin-top: 1rem;
+    font-weight: bold;
+    display: block;
+  }
+  textarea, input[type=text] {
+    width: 100%;
+    background: #222;
+    border: none;
+    border-radius: 6px;
+    color: #eee;
+    font-family: monospace;
+    font-size: 1rem;
+    padding: 0.5rem;
+    margin-top: 0.25rem;
+  }
+  textarea {
+    min-height: 80px;
+    resize: vertical;
+  }
+  button {
+    margin-top: 1rem;
+    padding: 0.75rem 1.5rem;
+    background: #007acc;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1rem;
+  }
+  button:hover {
+    background: #005fa3;
+  }
+  pre {
+    background: #222;
+    border-radius: 6px;
+    padding: 1rem;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    margin-top: 0.5rem;
+    font-family: monospace;
+    font-size: 0.9rem;
+  }
+  .error {
+    color: #ff4c4c;
+    margin-top: 0.5rem;
+    font-weight: bold;
+  }
+  .success {
+    color: #4caf50;
+    margin-top: 0.5rem;
+    font-weight: bold;
+  }
+  .section {
+    margin-bottom: 2rem;
+  }
+</style>
+</head>
+<body>
+
+<h1>All-in-One JWT Tool</h1>
+
+<div class="section">
+  <label for="jwtInput">Paste JWT to Decode & Verify:</label>
+  <textarea id="jwtInput" placeholder="Paste JWT here..."></textarea>
+  <label for="verifySecret">Secret for Signature Verification (HS256):</label>
+  <input type="text" id="verifySecret" placeholder="Enter secret key (optional)" />
+  <button id="decodeBtn">Decode & Verify</button>
+  <div id="decodeError" class="error"></div>
+  <pre id="decodedHeader"></pre>
+  <pre id="decodedPayload"></pre>
+  <pre id="decodedSignature"></pre>
+  <div id="verifyResult"></div>
+</div>
+
+<hr />
+
+<div class="section">
+  <label for="encodeHeader">Encode JWT - Header (JSON):</label>
+  <textarea id="encodeHeader">{ "alg": "HS256", "typ": "JWT" }</textarea>
+
+  <label for="encodePayload">Payload (JSON):</label>
+  <textarea id="encodePayload">{ "sub": "1234567890", "name": "John Doe", "iat": 1516239022 }</textarea>
+
+  <label for="encodeSecret">Secret for Signature (HS256):</label>
+  <input type="text" id="encodeSecret" placeholder="Enter secret key" />
+
+  <button id="encodeBtn">Encode JWT</button>
+  <div id="encodeError" class="error"></div>
+  <div id="encodedResult" class="success" style="word-break: break-word; margin-top: 0.5rem;"></div>
+</div>
+
+<script>
+  // Base64URL encode/decode helpers
+  function base64UrlEncode(str) {
+    return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  function base64UrlDecode(str) {
+    // Pad string length to multiple of 4
+    str = str.replace(/-/g, '+').replace(/_/g, '/');
+    while (str.length % 4) {
+      str += '=';
+    }
+    return atob(str);
+  }
+
+  // Convert string to Uint8Array
+  function strToUint8Array(str) {
+    const arr = new Uint8Array(str.length);
+    for(let i=0; i < str.length; i++) arr[i] = str.charCodeAt(i);
+    return arr;
+  }
+
+  // Convert ArrayBuffer to base64url
+  function arrayBufferToBase64Url(buffer) {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i=0; i<bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return base64UrlEncode(binary);
+  }
+
+  // SHA-256 HMAC sign using Web Crypto API, returns Promise<string> base64url signature
+  async function hmacSign(secret, data) {
+    const key = await crypto.subtle.importKey(
+      "raw",
+      strToUint8Array(secret),
+      {name: "HMAC", hash: {name: "SHA-256"}},
+      false,
+      ["sign"]
+    );
+    const signature = await crypto.subtle.sign("HMAC", key, strToUint8Array(data));
+    return arrayBufferToBase64Url(signature);
+  }
+
+  // Decode JWT
+  function decodeJWT(token) {
+    const parts = token.split('.');
+    if (parts.length !== 3) throw new Error('Invalid JWT format: should have 3 parts');
+    const header = JSON.parse(base64UrlDecode(parts[0]));
+    const payload = JSON.parse(base64UrlDecode(parts[1]));
+    const signature = parts[2];
+    return {header, payload, signature, unsigned: parts[0] + '.' + parts[1]};
+  }
+
+  // Show decoded JSON prettily
+  function prettyPrintJSON(obj) {
+    return JSON.stringify(obj, null, 2);
+  }
+
+  // Verify JWT HS256 signature
+  async function verifyJWT(token, secret) {
+    if (!secret) return null; // no secret = can't verify
+    const {signature, unsigned} = decodeJWT(token);
+    const expectedSig = await hmacSign(secret, unsigned);
+    return expectedSig === signature;
+  }
+
+  // Encode JWT
+  async function encodeJWT(header, payload, secret) {
+    const headerStr = JSON.stringify(header);
+    const payloadStr = JSON.stringify(payload);
+    const encodedHeader = base64UrlEncode(headerStr);
+    const encodedPayload = base64UrlEncode(payloadStr);
+    const unsigned = `${encodedHeader}.${encodedPayload}`;
+    if (!secret) throw new Error("Secret is required for signing");
+    const signature = await hmacSign(secret, unsigned);
+    return `${unsigned}.${signature}`;
+  }
+
+  // Elements
+  const jwtInput = document.getElementById('jwtInput');
+  const verifySecret = document.getElementById('verifySecret');
+  const decodeBtn = document.getElementById('decodeBtn');
+  const decodeError = document.getElementById('decodeError');
+  const decodedHeader = document.getElementById('decodedHeader');
+  const decodedPayload = document.getElementById('decodedPayload');
+  const decodedSignature = document.getElementById('decodedSignature');
+  const verifyResult = document.getElementById('verifyResult');
+
+  const encodeHeader = document.getElementById('encodeHeader');
+  const encodePayload = document.getElementById('encodePayload');
+  const encodeSecret = document.getElementById('encodeSecret');
+  const encodeBtn = document.getElementById('encodeBtn');
+  const encodeError = document.getElementById('encodeError');
+  const encodedResult = document.getElementById('encodedResult');
+
+  decodeBtn.onclick = async () => {
+    decodeError.textContent = '';
+    verifyResult.textContent = '';
+    decodedHeader.textContent = '';
+    decodedPayload.textContent = '';
+    decodedSignature.textContent = '';
+
+    const token = jwtInput.value.trim();
+    if (!token) {
+      decodeError.textContent = 'Please paste a JWT token.';
+      return;
+    }
+    try {
+      const {header, payload, signature} = decodeJWT(token);
+      decodedHeader.textContent = 'Header:\n' + prettyPrintJSON(header);
+      decodedPayload.textContent = 'Payload:\n' + prettyPrintJSON(payload);
+      decodedSignature.textContent = 'Signature:\n' + signature;
+
+      const secret = verifySecret.value.trim();
+      if (secret) {
+        const valid = await verifyJWT(token, secret);
+        verifyResult.textContent = valid
+          ? 'Signature is VALID ✅'
+          : 'Signature is INVALID ❌';
+        verifyResult.style.color = valid ? '#4caf50' : '#ff4c4c';
+      } else {
+        verifyResult.textContent = 'No secret provided. Signature verification skipped.';
+        verifyResult.style.color = '#aaa';
+      }
+    } catch (err) {
+      decodeError.textContent = 'Error decoding JWT: ' + err.message;
+    }
+  };
+
+  encodeBtn.onclick = async () => {
+    encodeError.textContent = '';
+    encodedResult.textContent = '';
+
+    let header, payload;
+    try {
+      header = JSON.parse(encodeHeader.value);
+    } catch {
+      encodeError.textContent = 'Invalid JSON in header.';
+      return;
+    }
+    try {
+      payload = JSON.parse(encodePayload.value);
+    } catch {
+      encodeError.textContent = 'Invalid JSON in payload.';
+      return;
+    }
+    const secret = encodeSecret.value.trim();
+    if (!secret) {
+      encodeError.textContent = 'Secret is required for signing.';
+      return;
+    }
+
+    try {
+      const token = await encodeJWT(header, payload, secret);
+      encodedResult.textContent = token;
+    } catch (err) {
+      encodeError.textContent = 'Error encoding JWT: ' + err.message;
+    }
+  };
+</script>
+
+</body>
+</html>
