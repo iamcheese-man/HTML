@@ -57,8 +57,12 @@
       font-weight: 500;
       letter-spacing: 0.03em;
       margin-bottom: 0;
+    }
+
+    .info pre {
       text-align: left;
       white-space: pre-wrap;
+      word-break: break-word;
     }
 
     .status {
@@ -89,11 +93,14 @@
   <h1>🛰️ ISS Live Tracker</h1>
   <div class="tracker-card">
     <div class="latlon">Waiting for data...</div>
-    <div class="info"></div>
+    <div class="info"><pre id="iss-data">Loading...</pre></div>
     <div class="status">Updating every 1 second</div>
   </div>
 
   <script>
+    const latlonEl = document.querySelector(".latlon");
+    const infoEl = document.getElementById("iss-data");
+
     async function fetchISS() {
       try {
         const res = await fetch("https://api.wheretheiss.at/v1/satellites/25544");
@@ -103,23 +110,27 @@
         const lon = data.longitude.toFixed(5);
         const alt = data.altitude.toFixed(2);
         const vel = data.velocity.toFixed(2);
+        const footprint = data.footprint.toFixed(2);
+        const solarLat = data.solar_lat.toFixed(2);
+        const solarLon = data.solar_lon.toFixed(2);
+        const time = new Date(data.timestamp * 1000).toLocaleString();
 
-        document.querySelector(".latlon").textContent = `Lat: ${lat}°, Lon: ${lon}°`;
+        latlonEl.textContent = `Lat: ${lat}°, Lon: ${lon}°`;
 
-        document.querySelector(".info").textContent = 
-`Altitude: ${alt} km
-Velocity: ${vel} km/h
-Visibility: ${data.visibility}
-Footprint: ${data.footprint.toFixed(2)} km
-Timestamp: ${new Date(data.timestamp * 1000).toLocaleString()}
-Day Number: ${data.daynum}
-Solar Latitude: ${data.solar_lat.toFixed(2)}°
-Solar Longitude: ${data.solar_lon.toFixed(2)}°
-Units: ${data.units}
-Satellite: ${data.name} (ID: ${data.id})`;
+        infoEl.textContent = `
+Altitude:      ${alt} km
+Velocity:      ${vel} km/h
+Visibility:    ${data.visibility}
+Footprint:     ${footprint} km
+Solar Lat/Lon: ${solarLat}°, ${solarLon}°
+Timestamp:     ${time}
+Day Number:    ${data.daynum}
+Satellite:     ${data.name} (ID: ${data.id})
+Units:         ${data.units}
+        `.trim();
       } catch {
-        document.querySelector(".latlon").textContent = "API error / rate limit.";
-        document.querySelector(".info").textContent = "";
+        latlonEl.textContent = "API error / rate limit.";
+        infoEl.textContent = "";
       }
     }
 
