@@ -1,18 +1,18 @@
 const CACHE_NAME = 'html-cache-v1';
 const FILES_TO_CACHE = [
   '/',
-  'ChatSystem.html'
-  'DataConvert.html'
-  'HttpRequesting.html'
-  'ISSTracker.html'
-  'JWTTool.html'
-  'MemoryGame.html'
-  'Minesweeper.html'
-  'PasswordGen.html'
-  'VideoSystem.html'
-  'WebSocketTesting.html'
-  'devicefeature.html'
-  'main.html'
+  'ChatSystem.html',
+  'DataConvert.html',
+  'HttpRequesting.html',
+  'ISSTracker.html',
+  'JWTTool.html',
+  'MemoryGame.html',
+  'Minesweeper.html',
+  'PasswordGen.html',
+  'VideoSystem.html',
+  'WebSocketTesting.html',
+  'devicefeature.html',
+  'main.html',
   'tetris.html'
 
 ];
