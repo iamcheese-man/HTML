@@ -1,10 +1,20 @@
 const CACHE_NAME = 'html-cache-v1';
 const FILES_TO_CACHE = [
   '/',
-  '/main.html',
-  '/tetris.html',
-  '/HttpRequesting.html',
-  '/PasswordGen.html'
+  'ChatSystem.html'
+  'DataConvert.html'
+  'HttpRequesting.html'
+  'ISSTracker.html'
+  'JWTTool.html'
+  'MemoryGame.html'
+  'Minesweeper.html'
+  'PasswordGen.html'
+  'VideoSystem.html'
+  'WebSocketTesting.html'
+  'devicefeature.html'
+  'main.html'
+  'tetris.html'
+
 ];
 
 // On install: cache all HTML files
