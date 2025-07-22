@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>HTTP Header Viewer & Request Tester</title>
+<title>HTTP Header Viewer & Request Tester (with CORS Proxy)</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
@@ -269,6 +269,8 @@
 </section>
 
 <script>
+  const PROXY_URL = 'https://cors-freedom-proxy-zergn.replit.dev/proxy';
+
   const form = document.getElementById('request-form');
   const responseStatus = document.getElementById('response-status');
   const responseHeaders = document.getElementById('response-headers');
@@ -280,14 +282,6 @@
 
   const HISTORY_KEY = 'http-request-tester-history';
 
-  function formatHeaders(headers) {
-    let result = '';
-    headers.forEach((value, key) => {
-      result += `${key}: ${value}\n`;
-    });
-    return result.trim();
-  }
-
   function tryParseJSON(text) {
     try {
       return JSON.stringify(JSON.parse(text), null, 2);
@@ -298,15 +292,8 @@
 
   function saveRequestToHistory(request) {
     let history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
-
-    // Remove exact duplicate if exists
     history = history.filter(item => JSON.stringify(item) !== JSON.stringify(request));
-
-    // Add new request at front
     history.unshift(request);
-
-    // No limit on history size
-
     localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
     renderHistory();
   }
@@ -330,7 +317,6 @@
       li.tabIndex = 0;
 
       li.addEventListener('click', () => {
-        // Load history item into form
         document.getElementById('url').value = req.url;
         document.getElementById('method').value = req.method;
         document.getElementById('headers').value = JSON.stringify(req.headers, null, 2);
@@ -395,42 +381,41 @@
       }
     }
 
-    let fetchOptions = {
+    // Prepare proxy POST payload
+    const proxyPayload = {
+      url,
       method,
-      headers
+      headers,
+      body: bodyRaw || null
     };
-
-    if (method !== 'GET' && method !== 'HEAD' && bodyRaw) {
-      fetchOptions.body = bodyRaw;
-    }
 
     statusMessage.textContent = 'Sending request...';
     statusMessage.className = '';
 
     try {
-      const response = await fetch(url, fetchOptions);
+      const response = await fetch(PROXY_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(proxyPayload)
+      });
 
-      responseStatus.textContent = `Status: ${response.status} ${response.statusText}`;
+      const data = await response.json();
 
-      const respHeaders = formatHeaders(response.headers);
-      responseHeaders.textContent = 'Response Headers:\n' + respHeaders;
-
-      let text = await response.text();
-
-      responseBody.textContent = tryParseJSON(text);
+      responseStatus.textContent = `Status: ${data.status} ${data.statusText}`;
+      responseHeaders.textContent = 'Response Headers:\n' + JSON.stringify(data.headers, null, 2);
+      responseBody.textContent = tryParseJSON(data.body);
 
       statusMessage.textContent = 'Request completed successfully.';
       statusMessage.className = 'success';
 
-      // Save to history
       saveRequestToHistory({
         url,
         method,
         headers,
         body: bodyRaw
       });
-    } catch (err) {
-      statusMessage.textContent = 'Error: ' + err.message;
+    } catch (error) {
+      statusMessage.textContent = 'Error: ' + error.message;
       statusMessage.className = 'error';
     } finally {
       submitBtn.disabled = false;
@@ -438,7 +423,6 @@
     }
   });
 
-  // Initial render of history on page load
   renderHistory();
 </script>
 
