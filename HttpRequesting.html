@@ -434,7 +434,7 @@
     // Construct final URL for fetch
     let urlToFetch = originalUrl;
     if (proxyUrl) {
-      urlToFetch = proxyUrl + encodeURIComponent(originalUrl);
+  urlToFetch = proxyUrl + originalUrl; // no encoding at all
     }
 
     let headers = {};
