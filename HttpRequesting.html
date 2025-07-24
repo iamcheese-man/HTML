@@ -347,15 +347,27 @@
     history.forEach((req, index) => {
       const li = document.createElement('li');
       li.textContent = `[${req.method}] ${req.url}`;
-      li.title = `Method: ${req.method}\nHeaders: ${JSON.stringify(req.headers)}\nBody: ${req.body}`;
+      li.title = `Method: ${req.method}\nHeaders: ${JSON.stringify(req.headers)}\nBody: ${req.body}\nProxy URL: ${req.proxyUrl || ''}`;
       li.tabIndex = 0;
 
       li.addEventListener('click', () => {
         // Load history item into form
-        document.getElementById('url').value = req.url;
+        document.getElementById('url').value = req.originalUrl || req.url || '';  // originalUrl separate if saved
         document.getElementById('method').value = req.method;
         document.getElementById('headers').value = JSON.stringify(req.headers, null, 2);
         document.getElementById('body').value = req.body || '';
+
+        // Proxy handling:
+        if (req.proxyUrl) {
+          useProxyCheckbox.checked = true;
+          proxyUrlInput.style.display = 'block';
+          proxyUrlInput.value = req.proxyUrl;
+        } else {
+          useProxyCheckbox.checked = false;
+          proxyUrlInput.style.display = 'none';
+          proxyUrlInput.value = '';
+        }
+
         statusMessage.textContent = `Loaded request from history (#${index + 1})`;
         statusMessage.className = '';
       });
@@ -376,6 +388,13 @@
     proxyUrlInput.style.display = useProxyCheckbox.checked ? 'block' : 'none';
   });
 
+  clearHistoryBtn.addEventListener('click', () => {
+    localStorage.removeItem(HISTORY_KEY);
+    renderHistory();
+    statusMessage.textContent = 'History cleared.';
+    statusMessage.className = '';
+  });
+
   form.addEventListener('submit', async e => {
     e.preventDefault();
 
@@ -387,12 +406,12 @@
     submitBtn.disabled = true;
     submitBtn.setAttribute('aria-busy', 'true');
 
-    let url = document.getElementById('url').value.trim();
+    let originalUrl = document.getElementById('url').value.trim();
     const method = document.getElementById('method').value;
     const headersRaw = document.getElementById('headers').value.trim();
     const bodyRaw = document.getElementById('body').value;
 
-    if (!url) {
+    if (!originalUrl) {
       statusMessage.textContent = 'Please enter a valid URL.';
       statusMessage.className = 'error';
       submitBtn.disabled = false;
@@ -400,8 +419,9 @@
       return;
     }
 
+    let proxyUrl = '';
     if (useProxyCheckbox.checked) {
-      const proxyUrl = proxyUrlInput.value.trim();
+      proxyUrl = proxyUrlInput.value.trim();
       if (!proxyUrl) {
         statusMessage.textContent = 'Proxy URL is required if proxy is enabled.';
         statusMessage.className = 'error';
@@ -409,10 +429,12 @@
         submitBtn.setAttribute('aria-busy', 'false');
         return;
       }
-      // Append requested URL to proxy URL WITHOUT modifying original url
-      // Simply concatenate proxyUrl + encodeURIComponent(url)
-      // User controls format of proxy URL fully
-      url = proxyUrl + encodeURIComponent(url);
+    }
+
+    // Construct final URL for fetch
+    let urlToFetch = originalUrl;
+    if (proxyUrl) {
+      urlToFetch = proxyUrl + encodeURIComponent(originalUrl);
     }
 
     let headers = {};
@@ -442,7 +464,7 @@
     statusMessage.className = '';
 
     try {
-      const response = await fetch(url, fetchOptions);
+      const response = await fetch(urlToFetch, fetchOptions);
 
       responseStatus.textContent = `Status: ${response.status} ${response.statusText}`;
 
@@ -456,9 +478,11 @@
       statusMessage.textContent = 'Request completed successfully.';
       statusMessage.className = 'success';
 
-      // Save to history
+      // Save to history, saving originalUrl and proxyUrl separately
       saveRequestToHistory({
-        url,
+        url: urlToFetch,        // full merged URL (for display in list)
+        originalUrl,            // the user's target URL input
+        proxyUrl,               // proxy URL or empty string
         method,
         headers,
         body: bodyRaw
