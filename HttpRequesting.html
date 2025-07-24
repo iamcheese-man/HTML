@@ -231,6 +231,15 @@
   #clear-history:hover {
     background: #dc2626;
   }
+
+  /* Proxy checkbox & input */
+  #proxy-section {
+    margin-top: 1rem;
+  }
+  #proxy-url {
+    margin-top: 0.5rem;
+    display: none;
+  }
 </style>
 </head>
 <body>
@@ -258,6 +267,11 @@
   <label for="body">Request Body (for POST, PUT, PATCH)</label>
   <textarea id="body" placeholder='{"key":"value"}' aria-label="Request Body"></textarea>
 
+  <div id="proxy-section">
+    <label><input type="checkbox" id="use-proxy" /> Use Proxy</label>
+    <input type="url" id="proxy-url" placeholder="Enter proxy URL here" />
+  </div>
+
   <button type="submit" aria-live="polite" aria-busy="false">Send Request</button>
   <div id="status-message" role="status" aria-live="polite"></div>
 </form>
@@ -281,6 +295,9 @@
   const submitBtn = form.querySelector('button[type="submit"]');
   const historyList = document.getElementById('history-list');
   const clearHistoryBtn = document.getElementById('clear-history');
+
+  const useProxyCheckbox = document.getElementById('use-proxy');
+  const proxyUrlInput = document.getElementById('proxy-url');
 
   const HISTORY_KEY = 'http-request-tester-history';
 
@@ -354,11 +371,9 @@
     });
   }
 
-  clearHistoryBtn.addEventListener('click', () => {
-    localStorage.removeItem(HISTORY_KEY);
-    renderHistory();
-    statusMessage.textContent = 'Request history cleared.';
-    statusMessage.className = 'success';
+  // Show/hide proxy URL input on checkbox toggle
+  useProxyCheckbox.addEventListener('change', () => {
+    proxyUrlInput.style.display = useProxyCheckbox.checked ? 'block' : 'none';
   });
 
   form.addEventListener('submit', async e => {
@@ -372,7 +387,7 @@
     submitBtn.disabled = true;
     submitBtn.setAttribute('aria-busy', 'true');
 
-    const url = document.getElementById('url').value.trim();
+    let url = document.getElementById('url').value.trim();
     const method = document.getElementById('method').value;
     const headersRaw = document.getElementById('headers').value.trim();
     const bodyRaw = document.getElementById('body').value;
@@ -383,6 +398,21 @@
       submitBtn.disabled = false;
       submitBtn.setAttribute('aria-busy', 'false');
       return;
+    }
+
+    if (useProxyCheckbox.checked) {
+      const proxyUrl = proxyUrlInput.value.trim();
+      if (!proxyUrl) {
+        statusMessage.textContent = 'Proxy URL is required if proxy is enabled.';
+        statusMessage.className = 'error';
+        submitBtn.disabled = false;
+        submitBtn.setAttribute('aria-busy', 'false');
+        return;
+      }
+      // Append requested URL to proxy URL WITHOUT modifying original url
+      // Simply concatenate proxyUrl + encodeURIComponent(url)
+      // User controls format of proxy URL fully
+      url = proxyUrl + encodeURIComponent(url);
     }
 
     let headers = {};
