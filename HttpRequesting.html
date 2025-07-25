@@ -2,245 +2,270 @@
 <html lang="en">
 <head>
   <meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="Http Requests" />
-<link rel="apple-touch-icon" href="icon.png" />
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>HTTP Header Viewer & Request Tester</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Http Requests" />
+  <link rel="apple-touch-icon" href="icon.png" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HTTP Header Viewer & Request Tester</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
-  :root {
-    --bg: #f9fafb;
-    --text: #222;
-    --accent: #3b82f6;
-    --input-bg: #fff;
-    --border: #d1d5db;
-    --error: #ef4444;
-    --success: #10b981;
-    --shadow: rgba(0, 0, 0, 0.12);
-  }
-  @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #121212;
-      --text: #eee;
-      --accent: #60a5fa;
-      --input-bg: #1f1f1f;
-      --border: #374151;
-      --error: #f87171;
-      --success: #34d399;
-      --shadow: rgba(0, 0, 0, 0.8);
+      --bg: #f9fafb;
+      --text: #222;
+      --accent: #3b82f6;
+      --input-bg: #fff;
+      --border: #d1d5db;
+      --error: #ef4444;
+      --success: #10b981;
+      --shadow: rgba(0, 0, 0, 0.12);
     }
-  }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --text: #eee;
+        --accent: #60a5fa;
+        --input-bg: #1f1f1f;
+        --border: #374151;
+        --error: #f87171;
+        --success: #34d399;
+        --shadow: rgba(0, 0, 0, 0.8);
+      }
+    }
 
-  *, *::before, *::after {
-    box-sizing: border-box;
-  }
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
 
-  body {
-    margin: 0; padding: 2rem;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-      Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    background-color: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
+    body {
+      margin: 0; padding: 2rem;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+        Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
 
-  h1 {
-    font-weight: 700;
-    font-size: 2.25rem;
-    margin-bottom: 1.5rem;
-    text-align: center;
-    color: var(--accent);
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    user-select: none;
-    text-shadow: 0 1px 4px var(--shadow);
-  }
+    h1 {
+      font-weight: 700;
+      font-size: 2.25rem;
+      margin-bottom: 1.5rem;
+      text-align: center;
+      color: var(--accent);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      user-select: none;
+      text-shadow: 0 1px 4px var(--shadow);
+    }
 
-  form {
-    width: 100%;
-    max-width: 720px;
-    background: var(--input-bg);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 1.5rem 2rem;
-    box-shadow: 0 6px 16px var(--shadow);
-    margin: 0 auto 2rem;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
-  }
+    form {
+      width: 100%;
+      max-width: 720px;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem 2rem;
+      box-shadow: 0 6px 16px var(--shadow);
+      margin: 0 auto 2rem;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
 
-  label {
-    display: block;
-    margin-top: 1.25rem;
-    font-weight: 600;
-    font-size: 1.1rem;
-    color: var(--text);
-    user-select: none;
-  }
+    label {
+      display: block;
+      margin-top: 1.25rem;
+      font-weight: 600;
+      font-size: 1.1rem;
+      color: var(--text);
+      user-select: none;
+    }
 
-  input[type="url"],
-  select,
-  textarea {
-    width: 100%;
-    margin-top: 0.5rem;
-    padding: 0.75rem 1rem;
-    font-size: 1rem;
-    font-family: monospace, monospace;
-    color: var(--text);
-    background: var(--input-bg);
-    border: 1.5px solid var(--border);
-    border-radius: 8px;
-    outline-offset: 2px;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-    resize: vertical;
-    min-height: 90px;
-  }
-  input[type="url"]:focus,
-  select:focus,
-  textarea:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 6px var(--accent);
-  }
+    input[type="url"],
+    select,
+    textarea {
+      width: 100%;
+      margin-top: 0.5rem;
+      padding: 0.75rem 1rem;
+      font-size: 1rem;
+      font-family: monospace, monospace;
+      color: var(--text);
+      background: var(--input-bg);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      outline-offset: 2px;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      resize: vertical;
+      min-height: 90px;
+    }
+    input[type="url"]:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 6px var(--accent);
+    }
 
-  select {
-    height: 40px;
-    font-family: inherit;
-  }
+    select {
+      height: 40px;
+      font-family: inherit;
+    }
 
-  button {
-    margin-top: 2rem;
-    padding: 0.9rem 2rem;
-    border: none;
-    border-radius: 10px;
-    background: linear-gradient(135deg, #2563eb, #3b82f6);
-    color: white;
-    font-weight: 700;
-    font-size: 1.15rem;
-    cursor: pointer;
-    user-select: none;
-    transition: background 0.3s ease, transform 0.15s ease;
-    box-shadow: 0 6px 12px rgba(59, 130, 246, 0.5);
-  }
-  button:hover:not(:disabled) {
-    background: linear-gradient(135deg, #1d4ed8, #2563eb);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 16px rgba(37, 99, 235, 0.6);
-  }
-  button:active:not(:disabled) {
-    transform: translateY(0);
-    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.4);
-  }
-  button:disabled {
-    background-color: #93c5fd;
-    cursor: not-allowed;
-    box-shadow: none;
-  }
+    button {
+      margin-top: 2rem;
+      padding: 0.9rem 2rem;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #2563eb, #3b82f6);
+      color: white;
+      font-weight: 700;
+      font-size: 1.15rem;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.3s ease, transform 0.15s ease;
+      box-shadow: 0 6px 12px rgba(59, 130, 246, 0.5);
+    }
+    button:hover:not(:disabled) {
+      background: linear-gradient(135deg, #1d4ed8, #2563eb);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(37, 99, 235, 0.6);
+    }
+    button:active:not(:disabled) {
+      transform: translateY(0);
+      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.4);
+    }
+    button:disabled {
+      background-color: #93c5fd;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
 
-  #status-message {
-    margin-top: 1.2rem;
-    font-weight: 700;
-    font-size: 1rem;
-    min-height: 24px;
-    user-select: none;
-    transition: color 0.3s ease;
-  }
+    #status-message {
+      margin-top: 1.2rem;
+      font-weight: 700;
+      font-size: 1rem;
+      min-height: 24px;
+      user-select: none;
+      transition: color 0.3s ease;
+    }
 
-  .error {
-    color: var(--error);
-  }
-  .success {
-    color: var(--success);
-  }
+    .error {
+      color: var(--error);
+    }
+    .success {
+      color: var(--success);
+    }
 
-  .result {
-    width: 100%;
-    max-width: 720px;
-    background: var(--input-bg);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 1.25rem 1.5rem;
-    box-shadow: 0 6px 16px var(--shadow);
-    overflow-wrap: break-word;
-    white-space: pre-wrap;
-    font-family: monospace, monospace;
-    font-size: 1rem;
-    margin: 0 auto 2rem;
-    user-select: text;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
-  }
+    .result {
+      width: 100%;
+      max-width: 720px;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      box-shadow: 0 6px 16px var(--shadow);
+      overflow-wrap: break-word;
+      white-space: pre-wrap;
+      font-family: monospace, monospace;
+      font-size: 1rem;
+      margin: 0 auto 2rem;
+      user-select: text;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
 
-  /* History below results */
-  #history-section {
-    max-width: 720px;
-    margin: 0 auto;
-  }
+    /* History below results */
+    #history-section {
+      max-width: 720px;
+      margin: 0 auto;
+    }
 
-  #history-section h2 {
-    color: var(--accent);
-    font-weight: 700;
-    font-size: 1.5rem;
-    margin-bottom: 0.75rem;
-    user-select: none;
-  }
+    #history-section h2 {
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 1.5rem;
+      margin-bottom: 0.75rem;
+      user-select: none;
+    }
 
-  #history-list {
-    list-style: none;
-    padding-left: 0;
-    margin: 0;
-    max-height: 250px;
-    overflow-y: auto;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    background: var(--input-bg);
-    box-shadow: 0 4px 12px var(--shadow);
-    font-family: monospace, monospace;
-    font-size: 0.9rem;
-  }
+    #history-list {
+      list-style: none;
+      padding-left: 0;
+      margin: 0;
+      max-height: 250px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--input-bg);
+      box-shadow: 0 4px 12px var(--shadow);
+      font-family: monospace, monospace;
+      font-size: 0.9rem;
+    }
 
-  #history-list li {
-    padding: 0.5rem 0.75rem;
-    border-bottom: 1px solid var(--border);
-    cursor: pointer;
-  }
-  #history-list li:last-child {
-    border-bottom: none;
-  }
-  #history-list li:hover,
-  #history-list li:focus {
-    background-color: var(--accent);
-    color: #fff;
-    outline: none;
-  }
+    #history-list li {
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+    }
+    #history-list li:last-child {
+      border-bottom: none;
+    }
+    #history-list li:hover,
+    #history-list li:focus {
+      background-color: var(--accent);
+      color: #fff;
+      outline: none;
+    }
 
-  #clear-history {
-    margin-top: 0.75rem;
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 8px;
-    background: var(--error);
-    color: #fff;
-    cursor: pointer;
-    font-weight: 700;
-    user-select: none;
-    transition: background-color 0.3s ease;
-  }
-  #clear-history:hover {
-    background: #dc2626;
-  }
+    #clear-history {
+      margin-top: 0.75rem;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 8px;
+      background: var(--error);
+      color: #fff;
+      cursor: pointer;
+      font-weight: 700;
+      user-select: none;
+      transition: background-color 0.3s ease;
+    }
+    #clear-history:hover {
+      background: #dc2626;
+    }
 
-  /* Proxy checkbox & input */
-  #proxy-section {
-    margin-top: 1rem;
-  }
-  #proxy-url {
-    margin-top: 0.5rem;
-    display: none;
-  }
-</style>
+    /* Proxy checkbox & input */
+    #proxy-section {
+      margin-top: 1rem;
+    }
+    #proxy-url {
+      margin-top: 0.5rem;
+      display: none;
+    }
+
+    /* Media previews */
+    #response-body img,
+    #response-body video,
+    #response-body audio,
+    #response-body iframe {
+      max-width: 100%;
+      margin-top: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 0 10px var(--shadow);
+    }
+
+    #response-body video,
+    #response-body audio {
+      outline: none;
+    }
+
+    a.download-link {
+      display: inline-block;
+      margin-top: 1rem;
+      color: var(--accent);
+      font-weight: 700;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
 
@@ -313,7 +338,7 @@
     try {
       return JSON.stringify(JSON.parse(text), null, 2);
     } catch {
-      return text;
+      return null;
     }
   }
 
@@ -383,7 +408,6 @@
     });
   }
 
-  // Show/hide proxy URL input on checkbox toggle
   useProxyCheckbox.addEventListener('change', () => {
     proxyUrlInput.style.display = useProxyCheckbox.checked ? 'block' : 'none';
   });
@@ -400,7 +424,7 @@
 
     responseStatus.textContent = '';
     responseHeaders.textContent = '';
-    responseBody.textContent = '';
+    responseBody.innerHTML = '';
     statusMessage.textContent = '';
     statusMessage.className = '';
     submitBtn.disabled = true;
@@ -434,7 +458,7 @@
     // Construct final URL for fetch
     let urlToFetch = originalUrl;
     if (proxyUrl) {
-  urlToFetch = proxyUrl + originalUrl; // no encoding at all
+      urlToFetch = proxyUrl + originalUrl; // no encoding at all
     }
 
     let headers = {};
@@ -471,9 +495,55 @@
       const respHeaders = formatHeaders(response.headers);
       responseHeaders.textContent = 'Response Headers:\n' + respHeaders;
 
-      let text = await response.text();
+      const contentType = response.headers.get('content-type') || '';
 
-      responseBody.textContent = tryParseJSON(text);
+      if (contentType.startsWith('application/json') || contentType.includes('json') || contentType.includes('text')) {
+        // Text or JSON: display pretty
+        const text = await response.text();
+        const prettyJson = tryParseJSON(text);
+        responseBody.textContent = prettyJson || text;
+
+      } else if (contentType.startsWith('image/')) {
+        // Image: show preview
+        const blob = await response.blob();
+        const imgUrl = URL.createObjectURL(blob);
+        responseBody.innerHTML = `<img src="${imgUrl}" alt="Image preview" />`;
+
+      } else if (contentType.startsWith('video/')) {
+        // Video: show video player
+        const blob = await response.blob();
+        const videoUrl = URL.createObjectURL(blob);
+        responseBody.innerHTML = `<video controls src="${videoUrl}"></video>`;
+
+      } else if (contentType.startsWith('audio/')) {
+        // Audio: show audio player
+        const blob = await response.blob();
+        const audioUrl = URL.createObjectURL(blob);
+        responseBody.innerHTML = `<audio controls src="${audioUrl}"></audio>`;
+
+      } else if (contentType === 'application/pdf') {
+        // PDF: embed via iframe
+        const blob = await response.blob();
+        const pdfUrl = URL.createObjectURL(blob);
+        responseBody.innerHTML = `<iframe src="${pdfUrl}" width="100%" height="600px" style="border:none;"></iframe>`;
+
+      } else {
+        // Other file types: offer download link + try text fallback
+        const blob = await response.blob();
+        const fileUrl = URL.createObjectURL(blob);
+
+        // Try to read as text for fallback (if small)
+        let textFallback = '';
+        try {
+          textFallback = await blob.text();
+        } catch {}
+
+        let html = `<a href="${fileUrl}" class="download-link" download="file">Download File (${contentType})</a>`;
+        if (textFallback.length && textFallback.length < 10000) { 
+          html += `<pre>${escapeHtml(textFallback)}</pre>`;
+        }
+        responseBody.innerHTML = html;
+      }
 
       statusMessage.textContent = 'Request completed successfully.';
       statusMessage.className = 'success';
@@ -495,6 +565,13 @@
       submitBtn.setAttribute('aria-busy', 'false');
     }
   });
+
+  // Utility: escape HTML for safe text display
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
 
   // Initial render of history on page load
   renderHistory();
