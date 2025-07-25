@@ -297,7 +297,18 @@
     <input type="url" id="proxy-url" placeholder="Enter proxy URL here" />
   </div>
 
+  <!-- REPEAT SENDING SECTION -->
+  <div id="repeat-section" style="margin-top: 1rem;">
+    <label><input type="checkbox" id="repeat-checkbox" /> Repeat Sending</label>
+    <div id="repeat-delay-container" style="display:none; margin-top: 0.5rem;">
+      <label for="repeat-delay">Delay between requests (ms):</label>
+      <input type="number" id="repeat-delay" min="100" value="1000" style="width: 100px; padding: 0.3rem; font-family: monospace;" />
+    </div>
+  </div>
+
   <button type="submit" aria-live="polite" aria-busy="false">Send Request</button>
+  <button id="toggle-repeat-btn" style="display:none; margin-top: 1rem;">Start Repeating</button>
+
   <div id="status-message" role="status" aria-live="polite"></div>
 </form>
 
@@ -324,7 +335,15 @@
   const useProxyCheckbox = document.getElementById('use-proxy');
   const proxyUrlInput = document.getElementById('proxy-url');
 
+  const repeatCheckbox = document.getElementById('repeat-checkbox');
+  const repeatDelayContainer = document.getElementById('repeat-delay-container');
+  const repeatDelayInput = document.getElementById('repeat-delay');
+  const toggleRepeatBtn = document.getElementById('toggle-repeat-btn');
+
   const HISTORY_KEY = 'http-request-tester-history';
+
+  let repeatIntervalId = null;
+  let isRepeating = false;
 
   function formatHeaders(headers) {
     let result = '';
@@ -351,8 +370,6 @@
     // Add new request at front
     history.unshift(request);
 
-    // No limit on history size
-
     localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
     renderHistory();
   }
@@ -377,7 +394,7 @@
 
       li.addEventListener('click', () => {
         // Load history item into form
-        document.getElementById('url').value = req.originalUrl || req.url || '';  // originalUrl separate if saved
+        document.getElementById('url').value = req.originalUrl || req.url || '';
         document.getElementById('method').value = req.method;
         document.getElementById('headers').value = JSON.stringify(req.headers, null, 2);
         document.getElementById('body').value = req.body || '';
@@ -419,15 +436,62 @@
     statusMessage.className = '';
   });
 
-  form.addEventListener('submit', async e => {
-    e.preventDefault();
+  repeatCheckbox.addEventListener('change', () => {
+    if (repeatCheckbox.checked) {
+      repeatDelayContainer.style.display = 'block';
+      toggleRepeatBtn.style.display = 'inline-block';
+    } else {
+      repeatDelayContainer.style.display = 'none';
+      toggleRepeatBtn.style.display = 'none';
+      stopRepeating();
+    }
+  });
 
+  toggleRepeatBtn.addEventListener('click', () => {
+    if (!isRepeating) {
+      startRepeating();
+    } else {
+      stopRepeating();
+    }
+  });
+
+  function startRepeating() {
+    const delay = parseInt(repeatDelayInput.value, 10);
+    if (isNaN(delay) || delay < 100) {
+      alert('Please enter a valid delay (minimum 100 ms)');
+      return;
+    }
+
+    isRepeating = true;
+    toggleRepeatBtn.textContent = 'Stop Repeating';
+    submitBtn.disabled = true;
+    repeatCheckbox.disabled = true;
+
+    // Send first request immediately
+    sendRequest();
+
+    // Schedule repeated requests
+    repeatIntervalId = setInterval(sendRequest, delay);
+  }
+
+  function stopRepeating() {
+    isRepeating = false;
+    toggleRepeatBtn.textContent = 'Start Repeating';
+    submitBtn.disabled = false;
+    repeatCheckbox.disabled = false;
+
+    if (repeatIntervalId !== null) {
+      clearInterval(repeatIntervalId);
+      repeatIntervalId = null;
+    }
+  }
+
+  async function sendRequest() {
     responseStatus.textContent = '';
     responseHeaders.textContent = '';
     responseBody.innerHTML = '';
     statusMessage.textContent = '';
     statusMessage.className = '';
-    submitBtn.disabled = true;
     submitBtn.setAttribute('aria-busy', 'true');
 
     let originalUrl = document.getElementById('url').value.trim();
@@ -438,8 +502,8 @@
     if (!originalUrl) {
       statusMessage.textContent = 'Please enter a valid URL.';
       statusMessage.className = 'error';
-      submitBtn.disabled = false;
       submitBtn.setAttribute('aria-busy', 'false');
+      stopRepeating();
       return;
     }
 
@@ -449,16 +513,15 @@
       if (!proxyUrl) {
         statusMessage.textContent = 'Proxy URL is required if proxy is enabled.';
         statusMessage.className = 'error';
-        submitBtn.disabled = false;
         submitBtn.setAttribute('aria-busy', 'false');
+        stopRepeating();
         return;
       }
     }
 
-    // Construct final URL for fetch
     let urlToFetch = originalUrl;
     if (proxyUrl) {
-      urlToFetch = proxyUrl + originalUrl; // no encoding at all
+      urlToFetch = proxyUrl + originalUrl;
     }
 
     let headers = {};
@@ -469,8 +532,8 @@
       } catch {
         statusMessage.textContent = 'Headers must be a valid JSON object.';
         statusMessage.className = 'error';
-        submitBtn.disabled = false;
         submitBtn.setAttribute('aria-busy', 'false');
+        stopRepeating();
         return;
       }
     }
@@ -498,49 +561,44 @@
       const contentType = response.headers.get('content-type') || '';
 
       if (contentType.startsWith('application/json') || contentType.includes('json') || contentType.includes('text')) {
-        // Text or JSON: display pretty
         const text = await response.text();
         const prettyJson = tryParseJSON(text);
         responseBody.textContent = prettyJson || text;
 
       } else if (contentType.startsWith('image/')) {
-        // Image: show preview
         const blob = await response.blob();
         const imgUrl = URL.createObjectURL(blob);
         responseBody.innerHTML = `<img src="${imgUrl}" alt="Image preview" />`;
 
       } else if (contentType.startsWith('video/')) {
-        // Video: show video player
         const blob = await response.blob();
         const videoUrl = URL.createObjectURL(blob);
         responseBody.innerHTML = `<video controls src="${videoUrl}"></video>`;
 
       } else if (contentType.startsWith('audio/')) {
-        // Audio: show audio player
         const blob = await response.blob();
         const audioUrl = URL.createObjectURL(blob);
         responseBody.innerHTML = `<audio controls src="${audioUrl}"></audio>`;
 
       } else if (contentType === 'application/pdf') {
-        // PDF: embed via iframe
         const blob = await response.blob();
         const pdfUrl = URL.createObjectURL(blob);
         responseBody.innerHTML = `<iframe src="${pdfUrl}" width="100%" height="600px" style="border:none;"></iframe>`;
 
       } else {
-        // Other file types: offer download link + try text fallback
+        // Fallback for other types
         const blob = await response.blob();
         const fileUrl = URL.createObjectURL(blob);
 
-        // Try to read as text for fallback (if small)
-        let textFallback = '';
+        // Try to get text preview if possible
+        let textPreview = '';
         try {
-          textFallback = await blob.text();
+          textPreview = await blob.text();
         } catch {}
 
         let html = `<a href="${fileUrl}" class="download-link" download="file">Download File (${contentType})</a>`;
-        if (textFallback.length && textFallback.length < 10000) { 
-          html += `<pre>${escapeHtml(textFallback)}</pre>`;
+        if (textPreview && textPreview.length < 10000) {
+          html += `<pre>${escapeHtml(textPreview)}</pre>`;
         }
         responseBody.innerHTML = html;
       }
@@ -548,33 +606,51 @@
       statusMessage.textContent = 'Request completed successfully.';
       statusMessage.className = 'success';
 
-      // Save to history, saving originalUrl and proxyUrl separately
+      // Save the request to history, store the original URL too
       saveRequestToHistory({
-        url: urlToFetch,        // full merged URL (for display in list)
-        originalUrl,            // the user's target URL input
-        proxyUrl,               // proxy URL or empty string
+        url: urlToFetch,
+        originalUrl,
+        proxyUrl,
         method,
         headers,
         body: bodyRaw
       });
-    } catch (err) {
-      statusMessage.textContent = 'Error: ' + err.message;
+
+    } catch (error) {
+      statusMessage.textContent = 'Error: ' + error.message;
       statusMessage.className = 'error';
+      stopRepeating();
     } finally {
-      submitBtn.disabled = false;
       submitBtn.setAttribute('aria-busy', 'false');
     }
-  });
-
-  // Utility: escape HTML for safe text display
-  function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
   }
 
-  // Initial render of history on page load
+  // Escape HTML utility function for safe displaying text
+  function escapeHtml(text) {
+    return text.replace(/[&<>"']/g, (m) => {
+      return {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[m];
+    });
+  }
+
+  // Handle form submission (single request)
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (isRepeating) return; // prevent sending manual request when repeating
+    sendRequest();
+  });
+
+  // Initialize UI states
+  proxyUrlInput.style.display = 'none';
+  toggleRepeatBtn.style.display = 'none';
+  repeatDelayContainer.style.display = 'none';
   renderHistory();
+
 </script>
 
 </body>
