@@ -2,85 +2,85 @@
 <html>
 <head>
   <meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="Tetris" />
-<link rel="apple-touch-icon" href="icon.png" />
-<meta charset="UTF-8">
-<title>Tetris</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<style>
-  html, body {
-    margin: 0;
-    padding: 0;
-    background: #111;
-    color: white;
-    font-family: sans-serif;
-    height: 100%;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: start;
-    touch-action: manipulation;
-  }
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Tetris" />
+  <link rel="apple-touch-icon" href="icon.png" />
+  <meta charset="UTF-8" />
+  <title>Tetris</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #111;
+      color: white;
+      font-family: sans-serif;
+      height: 100%;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: start;
+      touch-action: manipulation;
+    }
 
-  #gameContainer {
-    border: 6px solid #fff;
-    border-radius: 10px;
-    overflow: hidden;
-    width: 90vw;
-    max-width: 600px;
-    aspect-ratio: 6 / 14;
-    margin-top: 20px;
-  }
+    #gameContainer {
+      border: 6px solid #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      width: 90vw;
+      max-width: 600px;
+      aspect-ratio: 6 / 14;
+      margin-top: 20px;
+    }
 
-  canvas {
-    display: block;
-    width: 100%;
-    height: 100%;
-  }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
 
-  #score {
-    margin-top: 12px;
-    font-size: 22px;
-    font-weight: bold;
-    background: rgba(255, 255, 255, 0.1);
-    padding: 6px 16px;
-    border-radius: 8px;
-  }
+    #score {
+      margin-top: 12px;
+      font-size: 22px;
+      font-weight: bold;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 6px 16px;
+      border-radius: 8px;
+    }
 
-  #controls {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 16px;
-    margin: 20px 0;
-  }
+    #controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+      margin: 20px 0;
+    }
 
-  button {
-    padding: 25px 30px;
-    font-size: 28px;
-    border-radius: 12px;
-    border: none;
-    background-color: #333;
-    color: white;
-    box-shadow: 0 6px 15px rgba(0,0,0,0.5);
-    transition: transform 0.1s ease;
-  }
+    button {
+      padding: 25px 30px;
+      font-size: 28px;
+      border-radius: 12px;
+      border: none;
+      background-color: #333;
+      color: white;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.5);
+      transition: transform 0.1s ease;
+    }
 
-  button:active {
-    transform: scale(0.95);
-    background-color: #555;
-  }
+    button:active {
+      transform: scale(0.95);
+      background-color: #555;
+    }
 
-  #resetBtn {
-    margin-bottom: 12px;
-    padding: 10px 20px;
-    background: crimson;
-    font-size: 18px;
-    border-radius: 10px;
-  }
-</style>
+    #resetBtn {
+      margin-bottom: 12px;
+      padding: 10px 20px;
+      background: crimson;
+      font-size: 18px;
+      border-radius: 10px;
+    }
+  </style>
 </head>
 <body>
 
@@ -99,10 +99,27 @@
 
 <button id="resetBtn">Reset Score</button>
 
+<!-- Firebase scripts -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
 <script>
-const canvas = document.getElementById('tetris');
-const context = canvas.getContext('2d');
-const scoreDisplay = document.getElementById('score');
+// Firebase config and initialization
+const firebaseConfig = {
+  apiKey: "AIzaSyBackfZ8bJwAQG9QfQTgpTKpfrF2xQu7M8",
+  authDomain: "tetrisscore-5d6e4.firebaseapp.com",
+  projectId: "tetrisscore-5d6e4",
+  storageBucket: "tetrisscore-5d6e4.appspot.com",
+  messagingSenderId: "694384454225",
+  appId: "1:694384454225:web:13a2d88c01be7b3ba5e670",
+  measurementId: "G-28JXX7F24T",
+  databaseURL: "https://tetrisscore-5d6e4-default-rtdb.firebaseio.com"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// Generate random session ID (anonymous)
+const sessionId = Math.random().toString(36).slice(2);
 
 // COOKIE UTILS
 function setCookie(name, value, days = 3650) {
@@ -118,6 +135,10 @@ function getCookie(name) {
 function deleteCookie(name) {
   document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
 }
+
+const canvas = document.getElementById('tetris');
+const context = canvas.getContext('2d');
+const scoreDisplay = document.getElementById('score');
 
 function resizeCanvas() {
   const scale = 20;
@@ -160,9 +181,22 @@ function merge(arena, player) {
     }));
 }
 
-function updateScore() {
+// UPDATED updateScore: save locally + to Firebase
+async function updateScore() {
   scoreDisplay.textContent = `Score: ${player.score}`;
   setCookie('tetrisScore', player.score);
+  await db.ref("scores/" + sessionId).set({ score: player.score });
+}
+
+// NEW loadScore: load from both, take max, then sync back
+async function loadScore() {
+  const snap = await db.ref("scores/" + sessionId).get();
+  const serverScore = snap.exists() ? snap.val().score : 0;
+  const localScore = parseInt(getCookie('tetrisScore') || 0);
+  player.score = Math.max(serverScore, localScore);
+  scoreDisplay.textContent = `Score: ${player.score}`;
+  setCookie('tetrisScore', player.score);
+  await db.ref("scores/" + sessionId).set({ score: player.score });
 }
 
 function playerDrop() {
@@ -267,7 +301,7 @@ const arena = createMatrix(12, 20);
 const player = {
   pos: {x:0, y:0},
   matrix: null,
-  score: parseInt(getCookie('tetrisScore') || 0),
+  score: 0,
 };
 
 let dropCounter = 0;
@@ -284,8 +318,8 @@ function update(time = 0) {
 }
 
 playerReset();
+loadScore();
 update();
-updateScore();
 
 // Controls
 document.getElementById('left').addEventListener('click', () => playerMove(-1));
