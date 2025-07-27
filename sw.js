@@ -13,7 +13,8 @@ const FILES_TO_CACHE = [
   'WebSocketTesting.html',
   'devicefeature.html',
   'main.html',
-  'tetris.html'
+  'tetris.html',
+  'FileConverter.html'
 
 ];
 
