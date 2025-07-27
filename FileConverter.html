@@ -47,180 +47,211 @@
     word-break: break-all;
     color: #90caf9;
   }
+  /* Progress bar container */
+  #loadingContainer {
+    background: #444;
+    height: 5px;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 1em;
+  }
+  /* Progress bar itself */
   #loadingBar {
-    height: 4px;
+    height: 100%;
     width: 0%;
     background: #4caf50;
-    transition: width 0.4s ease;
-    margin-bottom: 1em;
+    transition: width 0.3s ease;
   }
 </style>
 </head>
 <body>
-<h1>🧩 Format Converter</h1>
-<div class="container">
-  <input type="file" id="fileInput" />
-  <div id="loadingBar"></div>
-  <label>Input Format (Detected)</label>
-  <select id="inputFormat" disabled></select>
-  <label>Convert To</label>
-  <select id="outputFormat"></select>
-  <button id="convertBtn">Convert & Download</button>
-  <div id="outputArea"></div>
-</div>
+  <h1>🧩 Format Converter</h1>
+  <div class="container">
+    <input type="file" id="fileInput" />
+    <label>Input Format (Detected)</label>
+    <select id="inputFormat" disabled></select>
+    <label>Convert To</label>
+    <select id="outputFormat"></select>
+    <button id="convertBtn">Convert & Download</button>
+
+    <div id="loadingContainer">
+      <div id="loadingBar"></div>
+    </div>
+
+    <div id="outputArea"></div>
+  </div>
 
 <script>
-const formatMap = {
-  png: ['jpg', 'webp', 'bmp', 'base64'],
-  jpg: ['png', 'webp', 'bmp', 'base64'],
-  jpeg: ['png', 'webp', 'bmp', 'base64'],
-  webp: ['png', 'jpg', 'bmp', 'base64'],
-  bmp: ['png', 'jpg', 'webp', 'base64'],
-  gif: ['png', 'jpg', 'webp', 'base64'],
-  json: ['csv', 'yaml', 'txt'],
-  csv: ['json', 'txt'],
-  yaml: ['json', 'txt'],
-  txt: ['json', 'csv', 'base64'],
-  xml: ['json', 'txt'],
-  base64: ['txt', 'png', 'jpg', 'webp'],
-  md: ['html', 'txt'],
-  html: ['md', 'txt'],
-  pdf: ['txt'],
-  docx: ['txt'],
-  mp3: ['base64'],
-  wav: ['base64'],
-  ogg: ['base64'],
-  mp4: ['base64'],
-  webm: ['base64'],
-  mov: ['base64'],
-  zip: ['base64'],
-  tar: ['base64'],
-  ttf: ['woff', 'base64'],
-  woff: ['ttf', 'base64'],
-  otf: ['ttf', 'base64']
-};
-
-const fileInput = document.getElementById('fileInput');
-const inputFormatSelect = document.getElementById('inputFormat');
-const outputFormatSelect = document.getElementById('outputFormat');
-const convertBtn = document.getElementById('convertBtn');
-const outputArea = document.getElementById('outputArea');
-const loadingBar = document.getElementById('loadingBar');
-
-let currentFile = null;
-let inputExt = '';
-
-fileInput.addEventListener('change', async () => {
-  const file = fileInput.files[0];
-  if (!file) return;
-  currentFile = file;
-  inputExt = file.name.split('.').pop().toLowerCase();
-
-  inputFormatSelect.innerHTML = `<option value="${inputExt}">${inputExt}</option>`;
-  updateOutputOptions(inputExt);
-});
-
-function updateOutputOptions(ext) {
-  outputFormatSelect.innerHTML = '';
-  const list = formatMap[ext] || [];
-  if (!list.length) {
-    outputFormatSelect.innerHTML = `<option value="">(no conversions available)</option>`;
-    return;
-  }
-  list.forEach(opt => {
-    const option = document.createElement('option');
-    option.value = opt;
-    option.textContent = opt;
-    outputFormatSelect.appendChild(option);
-  });
-}
-
-convertBtn.addEventListener('click', async () => {
-  const outExt = outputFormatSelect.value;
-  if (!currentFile || !outExt) return;
-
-  loadingBar.style.width = '30%';
-
-  const reader = new FileReader();
-  reader.onload = async () => {
-    let result;
-    const inputData = reader.result;
-    loadingBar.style.width = '60%';
-
-    if (['png', 'jpg', 'jpeg', 'webp', 'bmp', 'gif'].includes(inputExt) &&
-        ['png', 'jpg', 'jpeg', 'webp', 'bmp'].includes(outExt)) {
-      result = await convertImage(inputData, outExt);
-    } else if (outExt === 'base64') {
-      result = btoa(String.fromCharCode(...new Uint8Array(inputData)));
-    } else if (inputExt === 'base64') {
-      result = atob(inputData);
-    } else if (['json', 'csv', 'txt', 'yaml', 'html', 'md', 'xml'].includes(inputExt)) {
-      result = convertTextData(inputData, inputExt, outExt);
-    }
-
-    loadingBar.style.width = '100%';
-
-    if (!result) {
-      alert('Unsupported conversion.');
-      loadingBar.style.width = '0%';
-      return;
-    }
-
-    const blob = typeof result === 'string' ? new Blob([result]) : result;
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `converted.${outExt}`;
-    link.textContent = '⬇ Download converted file';
-    outputArea.innerHTML = '';
-    outputArea.appendChild(link);
-    setTimeout(() => (loadingBar.style.width = '0%'), 1000);
+  const formatMap = {
+    png: ['jpg', 'webp', 'bmp', 'base64'],
+    jpg: ['png', 'webp', 'bmp', 'base64'],
+    jpeg: ['png', 'webp', 'bmp', 'base64'],
+    webp: ['png', 'jpg', 'bmp', 'base64'],
+    bmp: ['png', 'jpg', 'webp', 'base64'],
+    gif: ['png', 'jpg', 'webp', 'base64'],
+    json: ['csv', 'yaml', 'txt'],
+    csv: ['json', 'txt'],
+    yaml: ['json', 'txt'],
+    txt: ['json', 'csv', 'base64'],
+    xml: ['json', 'txt'],
+    base64: ['txt', 'png', 'jpg', 'webp'],
+    md: ['html', 'txt'],
+    html: ['md', 'txt'],
+    pdf: ['txt'],
+    docx: ['txt'],
+    mp3: ['base64'],
+    wav: ['base64'],
+    ogg: ['base64'],
+    mp4: ['base64'],
+    webm: ['base64'],
+    mov: ['base64'],
+    zip: ['base64'],
+    tar: ['base64'],
+    ttf: ['woff', 'base64'],
+    woff: ['ttf', 'base64'],
+    otf: ['ttf', 'base64']
   };
 
-  if (inputExt === 'base64' || ['json', 'csv', 'yaml', 'txt', 'html', 'md', 'xml'].includes(inputExt)) {
-    reader.readAsText(currentFile);
-  } else {
-    reader.readAsArrayBuffer(currentFile);
-  }
-});
+  const fileInput = document.getElementById('fileInput');
+  const inputFormatSelect = document.getElementById('inputFormat');
+  const outputFormatSelect = document.getElementById('outputFormat');
+  const convertBtn = document.getElementById('convertBtn');
+  const outputArea = document.getElementById('outputArea');
+  const loadingBar = document.getElementById('loadingBar');
 
-function convertTextData(text, from, to) {
-  try {
-    if (from === 'json' && to === 'csv') {
-      const arr = JSON.parse(text);
-      const keys = Object.keys(arr[0]);
-      const rows = arr.map(obj => keys.map(k => obj[k]).join(','));
-      return keys.join(',') + '\n' + rows.join('\n');
-    } else if (from === 'csv' && to === 'json') {
-      const [head, ...rows] = text.trim().split('\n');
-      const keys = head.split(',');
-      return JSON.stringify(rows.map(row => {
-        const values = row.split(',');
-        return Object.fromEntries(keys.map((k, i) => [k, values[i]]));
-      }), null, 2);
-    } else if (to === 'txt') {
-      return text;
-    }
-  } catch (e) {
-    alert('Conversion error: ' + e.message);
-    return null;
-  }
-}
+  let currentFile = null;
+  let inputExt = '';
 
-async function convertImage(buffer, toFormat) {
-  return new Promise((resolve) => {
-    const blob = new Blob([buffer]);
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      canvas.toBlob((b) => resolve(b), `image/${toFormat}`);
-    };
-    img.src = URL.createObjectURL(blob);
+  fileInput.addEventListener('change', () => {
+    loadingBar.style.width = '0%'; // reset progress on new file
+    const file = fileInput.files[0];
+    if (!file) return;
+    currentFile = file;
+    inputExt = file.name.split('.').pop().toLowerCase();
+
+    inputFormatSelect.innerHTML = `<option value="${inputExt}">${inputExt}</option>`;
+    updateOutputOptions(inputExt);
+    outputArea.innerHTML = '';
   });
-}
+
+  function updateOutputOptions(ext) {
+    outputFormatSelect.innerHTML = '';
+    const list = formatMap[ext] || [];
+    if (!list.length) {
+      outputFormatSelect.innerHTML = `<option value="">(no conversions available)</option>`;
+      return;
+    }
+    list.forEach(opt => {
+      const option = document.createElement('option');
+      option.value = opt;
+      option.textContent = opt;
+      outputFormatSelect.appendChild(option);
+    });
+  }
+
+  convertBtn.addEventListener('click', () => {
+    if (!currentFile) return;
+    if (!outputFormatSelect.value) return;
+
+    loadingBar.style.width = '10%'; // start animation
+
+    const reader = new FileReader();
+
+    reader.onprogress = (event) => {
+      if (event.lengthComputable) {
+        const percent = (event.loaded / event.total) * 90;
+        loadingBar.style.width = percent.toFixed(0) + '%';
+      }
+    };
+
+    reader.onload = async () => {
+      try {
+        let result;
+        const inputData = reader.result;
+        const outExt = outputFormatSelect.value;
+
+        if (['png', 'jpg', 'jpeg', 'webp', 'bmp', 'gif'].includes(inputExt) &&
+            ['png', 'jpg', 'jpeg', 'webp', 'bmp'].includes(outExt)) {
+          result = await convertImage(inputData, outExt);
+        } else if (outExt === 'base64') {
+          result = btoa(String.fromCharCode(...new Uint8Array(inputData)));
+        } else if (inputExt === 'base64') {
+          result = atob(inputData);
+        } else if (['json', 'csv', 'txt', 'yaml', 'html', 'md', 'xml'].includes(inputExt)) {
+          result = convertTextData(inputData, inputExt, outExt);
+        }
+
+        if (!result) throw new Error('Unsupported conversion');
+
+        loadingBar.style.width = '100%';
+
+        const blob = typeof result === 'string' ? new Blob([result]) : result;
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `converted.${outExt}`;
+        link.textContent = '⬇ Download converted file';
+        outputArea.innerHTML = '';
+        outputArea.appendChild(link);
+      } catch (e) {
+        alert('Error: ' + e.message);
+      } finally {
+        setTimeout(() => {
+          loadingBar.style.transition = 'width 0.4s ease';
+          loadingBar.style.width = '0%';
+        }, 1000);
+      }
+    };
+
+    if (inputExt === 'base64') {
+      reader.readAsText(currentFile);
+    } else if (['json', 'csv', 'yaml', 'txt', 'html', 'md', 'xml'].includes(inputExt)) {
+      reader.readAsText(currentFile);
+    } else {
+      reader.readAsArrayBuffer(currentFile);
+    }
+  });
+
+  function convertTextData(text, from, to) {
+    try {
+      if (from === 'json' && to === 'csv') {
+        const arr = JSON.parse(text);
+        if (!Array.isArray(arr) || arr.length === 0) throw new Error('JSON must be an array with data');
+        const keys = Object.keys(arr[0]);
+        const rows = arr.map(obj => keys.map(k => obj[k]).join(','));
+        return keys.join(',') + '\n' + rows.join('\n');
+      } else if (from === 'csv' && to === 'json') {
+        const [head, ...rows] = text.trim().split('\n');
+        const keys = head.split(',');
+        return JSON.stringify(rows.map(row => {
+          const values = row.split(',');
+          return Object.fromEntries(keys.map((k, i) => [k, values[i]]));
+        }), null, 2);
+      } else if (to === 'txt') {
+        return text;
+      }
+      // Add more conversions here if needed
+    } catch (e) {
+      alert('Conversion error: ' + e.message);
+      return null;
+    }
+  }
+
+  async function convertImage(buffer, toFormat) {
+    return new Promise((resolve) => {
+      const blob = new Blob([buffer]);
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        canvas.toBlob((b) => resolve(b), `image/${toFormat}`);
+      };
+      img.onerror = () => resolve(null);
+      img.src = URL.createObjectURL(blob);
+    });
+  }
 </script>
 </body>
 </html>
