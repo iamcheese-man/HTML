@@ -276,15 +276,25 @@
   <input type="url" id="url" placeholder="https://api.example.com/data" required autofocus />
 
   <label for="method">HTTP Method</label>
-  <select id="method" aria-label="HTTP Method">
-    <option>GET</option>
-    <option>POST</option>
-    <option>PUT</option>
-    <option>PATCH</option>
-    <option>DELETE</option>
-    <option>HEAD</option>
-    <option>OPTIONS</option>
-  </select>
+<select id="method">
+  <option>GET</option>
+  <option>POST</option>
+  <option>PUT</option>
+  <option>PATCH</option>
+  <option>DELETE</option>
+  <option>OPTIONS</option>
+  <option>HEAD</option>
+  <option>CONNECT</option>
+  <option>TRACE</option>
+  <option>PURGE</option>
+  <option>LINK</option>
+  <option>UNLINK</option>
+  <option>COPY</option>
+  <option>LOCK</option>
+  <option>UNLOCK</option>
+  <option>PROPFIND</option>
+  <option>VIEW</option>
+</select>
 
   <label for="headers">Custom Headers (JSON format)</label>
   <textarea id="headers" placeholder='{"Authorization": "Bearer token", "X-Custom-Header": "value"}' aria-label="Custom Headers"></textarea>
