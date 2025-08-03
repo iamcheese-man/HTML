@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>DNS Lookup Tool</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", sans-serif;
+      background: #121212;
+      color: #eee;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      font-size: 2em;
+      margin-bottom: 20px;
+      color: #4fc3f7;
+    }
+
+    .container {
+      max-width: 600px;
+      width: 100%;
+      background: #1e1e1e;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.6);
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px 15px;
+      font-size: 1em;
+      border-radius: 6px;
+      border: none;
+      background: #2a2a2a;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      font-size: 1em;
+      border: none;
+      border-radius: 6px;
+      background: #4fc3f7;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    button:hover {
+      background: #29b6f6;
+    }
+
+    pre {
+      margin-top: 20px;
+      background: #0d0d0d;
+      padding: 15px;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-size: 0.95em;
+      color: #9fef9f;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 DNS Lookup</h1>
+  <div class="container">
+    <input type="text" id="domain" placeholder="Enter a domain (e.g. example.com)" />
+    <button onclick="lookupDNS()">Check DNS Records</button>
+    <pre id="output">Results will appear here...</pre>
+  </div>
+
+  <script>
+    async function lookupDNS() {
+      const domain = document.getElementById("domain").value.trim();
+      const output = document.getElementById("output");
+      if (!domain) {
+        output.textContent = "Please enter a domain name.";
+        return;
+      }
+
+      output.textContent = `Looking up records for: ${domain}...\n`;
+      const types = ["A", "AAAA", "MX", "CNAME"];
+
+      for (const type of types) {
+        try {
+          const res = await fetch(`https://dns.google/resolve?name=${domain}&type=${type}`);
+          const data = await res.json();
+          output.textContent += `\n▶ ${type} Records:\n`;
+          if (!data.Answer) {
+            output.textContent += "  ❌ No records found.\n";
+            continue;
+          }
+          for (const answer of data.Answer) {
+            output.textContent += `  • ${answer.name} → ${answer.data} (TTL: ${answer.TTL})\n`;
+          }
+        } catch (err) {
+          output.textContent += `❌ Error fetching ${type} records: ${err.message}\n`;
+        }
+      }
+    }
+  </script>
+</body>
+</html>
