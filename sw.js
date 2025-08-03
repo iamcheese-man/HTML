@@ -14,7 +14,7 @@ const FILES_TO_CACHE = [
   'devicefeature.html',
   'main.html',
   'tetris.html',
-  'FileConverter.html'
+  'DnsLookup.html'
 
 ];
 
