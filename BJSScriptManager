@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Browser JS Script Manager</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  
+  * {
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #1e1e2f 0%, #2a1a3a 100%);
+    color: #e0e0e0;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+  }
+  
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  
+  header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  
+  h1 {
+    font-size: 2.5rem;
+    margin: 0 0 0.5rem 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .subtitle {
+    color: #a0a0b0;
+    font-size: 0.95rem;
+  }
+  
+  .main-content {
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  @media (max-width: 968px) {
+    .main-content {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  .editor-panel {
+    background: #2c2c3e;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+  
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  
+  .panel-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fff;
+  }
+  
+  .line-numbers {
+    background: #1a1a2e;
+    color: #666;
+    padding: 10px 8px;
+    border-radius: 8px 0 0 8px;
+    text-align: right;
+    user-select: none;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    float: left;
+    min-width: 40px;
+  }
+  
+  textarea {
+    width: calc(100% - 48px);
+    height: 300px;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    border: none;
+    padding: 10px;
+    border-radius: 0 8px 8px 0;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    resize: vertical;
+    line-height: 1.5;
+    float: left;
+  }
+  
+  textarea:focus {
+    outline: 2px solid #667eea;
+  }
+  
+  .editor-wrapper {
+    overflow: hidden;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+  }
+  
+  .buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  button {
+    padding: 0.7rem 1.4rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  }
+  
+  button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  }
+  
+  button:active {
+    transform: translateY(0);
+  }
+  
+  button.secondary {
+    background: #3a3a4e;
+    box-shadow: none;
+  }
+  
+  button.secondary:hover {
+    background: #4a4a5e;
+  }
+  
+  button.danger {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  }
+  
+  .scripts-panel {
+    background: #2c2c3e;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+  
+  .script-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-top: 1rem;
+  }
+  
+  .script-item {
+    background: #1a1a2e;
+    padding: 0.8rem;
+    border-radius: 8px;
+    margin-bottom: 0.6rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s;
+  }
+  
+  .script-item:hover {
+    background: #252538;
+    transform: translateX(4px);
+  }
+  
+  .script-name {
+    font-weight: 500;
+    color: #fff;
+    flex: 1;
+    cursor: pointer;
+  }
+  
+  .script-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  .icon-btn {
+    background: transparent;
+    border: none;
+    color: #a0a0b0;
+    cursor: pointer;
+    padding: 0.3rem;
+    border-radius: 4px;
+    transition: all 0.2s;
+    font-size: 1rem;
+  }
+  
+  .icon-btn:hover {
+    background: #3a3a4e;
+    color: #fff;
+    transform: none;
+    box-shadow: none;
+  }
+  
+  .no-scripts {
+    text-align: center;
+    color: #666;
+    padding: 2rem;
+    font-style: italic;
+  }
+  
+  #console {
+    width: 100%;
+    min-height: 250px;
+    max-height: 400px;
+    background: #1a1a2e;
+    color: #d0d0ff;
+    border-radius: 12px;
+    padding: 1rem;
+    overflow-y: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    white-space: pre-wrap;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    word-break: break-word;
+  }
+  
+  .console-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+  
+  .log-entry {
+    padding: 0.3rem 0;
+    border-bottom: 1px solid #2a2a3e;
+  }
+  
+  .log-error {
+    color: #ff6b6b;
+  }
+  
+  .log-success {
+    color: #51cf66;
+  }
+  
+  .log-info {
+    color: #74c0fc;
+  }
+  
+  .templates {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  
+  .template-card {
+    background: #1a1a2e;
+    padding: 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: 2px solid transparent;
+  }
+  
+  .template-card:hover {
+    border-color: #667eea;
+    transform: translateY(-4px);
+  }
+  
+  .template-name {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #fff;
+  }
+  
+  .template-desc {
+    font-size: 0.85rem;
+    color: #a0a0b0;
+  }
+  
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #1a1a2e;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #667eea;
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: #764ba2;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>⚡ JS Script Manager</h1>
+    <p class="subtitle">Write, test, and save JavaScript snippets in your browser</p>
+  </header>
+
+  <div class="main-content">
+    <div class="editor-panel">
+      <div class="panel-header">
+        <div class="panel-title">📝 Code Editor</div>
+      </div>
+      
+      <div class="editor-wrapper">
+        <div id="lineNumbers" class="line-numbers">1</div>
+        <textarea id="scriptInput" spellcheck="false">// Example: Fetch data from an API
+console.log("Fetching data from CoinGecko API...");
+
+fetch('https://api.coingecko.com/api/v3/ping')
+  .then(r => r.json())
+  .then(data => {
+    console.log("✓ Success! Response:");
+    console.log(JSON.stringify(data, null, 2));
+  })
+  .catch(err => {
+    console.error("✗ Fetch error:", err);
+  });</textarea>
+      </div>
+
+      <div class="buttons">
+        <button id="runBtn">▶ Run Script</button>
+        <button id="clearEditorBtn" class="secondary">Clear Editor</button>
+        <button id="copyBtn" class="secondary">📋 Copy Code</button>
+        <button id="downloadBtn" class="secondary">⬇ Download</button>
+      </div>
+      
+      <div class="templates">
+        <div class="template-card" data-template="fetch">
+          <div class="template-name">Fetch API</div>
+          <div class="template-desc">Basic fetch example</div>
+        </div>
+        <div class="template-card" data-template="timeout">
+          <div class="template-name">Timeout</div>
+          <div class="template-desc">Delayed execution</div>
+        </div>
+        <div class="template-card" data-template="interval">
+          <div class="template-name">Interval</div>
+          <div class="template-desc">Repeated execution</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="scripts-panel">
+      <div class="panel-header">
+        <div class="panel-title">💾 Saved Scripts</div>
+      </div>
+      
+      <div class="buttons">
+        <button id="saveScriptBtn">💾 Save Current</button>
+        <button id="exportAllBtn" class="secondary">Export All</button>
+      </div>
+      
+      <div id="scriptList" class="script-list"></div>
+    </div>
+  </div>
+
+  <div class="console-header">
+    <div class="panel-title">🖥️ Console Output</div>
+    <div class="buttons">
+      <button id="clearConsoleBtn" class="secondary">Clear Console</button>
+    </div>
+  </div>
+  <div id="console"></div>
+</div>
+
+<script>
+  const runBtn = document.getElementById('runBtn');
+  const clearConsoleBtn = document.getElementById('clearConsoleBtn');
+  const clearEditorBtn = document.getElementById('clearEditorBtn');
+  const saveScriptBtn = document.getElementById('saveScriptBtn');
+  const exportAllBtn = document.getElementById('exportAllBtn');
+  const copyBtn = document.getElementById('copyBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const scriptInput = document.getElementById('scriptInput');
+  const consoleDiv = document.getElementById('console');
+  const scriptList = document.getElementById('scriptList');
+  const lineNumbers = document.getElementById('lineNumbers');
+
+  // In-memory storage (replaces localStorage)
+  let savedScripts = {};
+
+  // Templates
+  const templates = {
+    fetch: `// Fetch API Example
+fetch('https://api.coingecko.com/api/v3/ping')
+  .then(r => r.json())
+  .then(data => console.log(data))
+  .catch(err => console.error(err));`,
+    timeout: `// Timeout Example
+console.log("Starting timer...");
+setTimeout(() => {
+  console.log("3 seconds have passed!");
+}, 3000);`,
+    interval: `// Interval Example
+let count = 0;
+const timer = setInterval(() => {
+  count++;
+  console.log("Count:", count);
+  if (count >= 5) {
+    clearInterval(timer);
+    console.log("Timer stopped!");
+  }
+}, 1000);`
+  };
+
+  // Update line numbers
+  function updateLineNumbers() {
+    const lines = scriptInput.value.split('\n').length;
+    lineNumbers.textContent = Array.from({length: lines}, (_, i) => i + 1).join('\n');
+  }
+
+  scriptInput.addEventListener('input', updateLineNumbers);
+  scriptInput.addEventListener('scroll', () => {
+    lineNumbers.scrollTop = scriptInput.scrollTop;
+  });
+  updateLineNumbers();
+
+  // Override console methods
+  (function() {
+    const oldLog = console.log;
+    const oldError = console.error;
+    const oldWarn = console.warn;
+
+    console.log = function(...args) {
+      oldLog.apply(console, args);
+      const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ');
+      consoleDiv.innerHTML += `<div class="log-entry">${escapeHtml(msg)}</div>`;
+      consoleDiv.scrollTop = consoleDiv.scrollHeight;
+    };
+
+    console.error = function(...args) {
+      oldError.apply(console, args);
+      const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ');
+      consoleDiv.innerHTML += `<div class="log-entry log-error">✗ ERROR: ${escapeHtml(msg)}</div>`;
+      consoleDiv.scrollTop = consoleDiv.scrollHeight;
+    };
+
+    console.warn = function(...args) {
+      oldWarn.apply(console, args);
+      const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ');
+      consoleDiv.innerHTML += `<div class="log-entry" style="color: #ffd43b;">⚠ WARN: ${escapeHtml(msg)}</div>`;
+      consoleDiv.scrollTop = consoleDiv.scrollHeight;
+    };
+  })();
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  // Run Script
+  runBtn.addEventListener('click', () => {
+    try {
+      consoleDiv.innerHTML += `<div class="log-entry log-info">▶ Running script...</div>`;
+      const code = scriptInput.value;
+      new Function(code)();
+    } catch (e) {
+      console.error(e.message);
+    }
+  });
+
+  // Clear Console
+  clearConsoleBtn.addEventListener('click', () => {
+    consoleDiv.innerHTML = '';
+  });
+
+  // Clear Editor
+  clearEditorBtn.addEventListener('click', () => {
+    if (confirm('Clear the editor? This cannot be undone.')) {
+      scriptInput.value = '';
+      updateLineNumbers();
+    }
+  });
+
+  // Copy Code
+  copyBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText(scriptInput.value).then(() => {
+      const original = copyBtn.textContent;
+      copyBtn.textContent = '✓ Copied!';
+      setTimeout(() => copyBtn.textContent = original, 2000);
+    });
+  });
+
+  // Download Script
+  downloadBtn.addEventListener('click', () => {
+    const blob = new Blob([scriptInput.value], { type: 'text/javascript' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'script.js';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  // Save Script (using in-memory storage)
+  saveScriptBtn.addEventListener('click', () => {
+    const name = prompt("Enter a name for this script:");
+    if (!name) return alert("Script name is required.");
+    
+    savedScripts[name] = scriptInput.value;
+    renderScriptList();
+    console.log(`✓ Script "${name}" saved!`);
+  });
+
+  // Load Script
+  function loadScript(name) {
+    if (!savedScripts[name]) return alert(`No script found with the name "${name}"`);
+    scriptInput.value = savedScripts[name];
+    updateLineNumbers();
+    console.log(`✓ Script "${name}" loaded!`);
+  }
+
+  // Delete Script
+  function deleteScript(name) {
+    if (confirm(`Delete script "${name}"?`)) {
+      delete savedScripts[name];
+      renderScriptList();
+      console.log(`✓ Script "${name}" deleted!`);
+    }
+  }
+
+  // Render Script List
+  function renderScriptList() {
+    const scripts = Object.keys(savedScripts);
+    if (scripts.length === 0) {
+      scriptList.innerHTML = '<div class="no-scripts">No saved scripts yet</div>';
+      return;
+    }
+
+    scriptList.innerHTML = scripts.map(name => `
+      <div class="script-item">
+        <div class="script-name" onclick="loadScript('${escapeHtml(name)}')">${escapeHtml(name)}</div>
+        <div class="script-actions">
+          <button class="icon-btn" onclick="loadScript('${escapeHtml(name)}')" title="Load">📂</button>
+          <button class="icon-btn" onclick="deleteScript('${escapeHtml(name)}')" title="Delete">🗑️</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Export All Scripts
+  exportAllBtn.addEventListener('click', () => {
+    const dataStr = JSON.stringify(savedScripts, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'scripts-export.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  // Template Cards
+  document.querySelectorAll('.template-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const template = card.dataset.template;
+      scriptInput.value = templates[template];
+      updateLineNumbers();
+    });
+  });
+
+  // Initial render
+  renderScriptList();
+</script>
+
+</body>
+</html>
