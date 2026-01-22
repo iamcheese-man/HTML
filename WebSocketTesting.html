@@ -7,11 +7,13 @@
   <link rel="apple-touch-icon" href="icon.png" />
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>WebSocket / Socket.IO Tester</title>
+  <title>WebSocket Tester</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
@@ -68,7 +70,11 @@
       transition: background-color 0.3s ease;
     }
 
-    input[type="text"]:focus { outline: none; background: #3a4e8c; box-shadow: 0 0 8px #8ab4ffcc; }
+    input[type="text"]:focus {
+      outline: none;
+      background: #3a4e8c;
+      box-shadow: 0 0 8px #8ab4ffcc;
+    }
 
     .controls {
       display: flex;
@@ -98,7 +104,11 @@
       max-width: 140px;
     }
 
-    button:disabled { background: #475c82; box-shadow: none; cursor: not-allowed; }
+    button:disabled {
+      background: #475c82;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
 
     button:hover:not(:disabled) {
       background: linear-gradient(90deg, #7fb1ff, #0055ee);
@@ -107,7 +117,9 @@
         inset 0 -3px 0 #558cff;
     }
 
-    #messageInput, #eventInput { margin-top: 8px; }
+    #messageInput {
+      margin-top: 8px;
+    }
 
     #messages {
       margin-top: 20px;
@@ -132,8 +144,17 @@
       line-height: 1.3;
     }
 
-    .sent { background: #3b5bff; align-self: flex-end; box-shadow: 0 2px 8px #2a43c1; }
-    .received { background: #20632d; align-self: flex-start; box-shadow: 0 2px 8px #17461f; }
+    .sent {
+      background: #3b5bff;
+      align-self: flex-end;
+      box-shadow: 0 2px 8px #2a43c1;
+    }
+
+    .received {
+      background: #20632d;
+      align-self: flex-start;
+      box-shadow: 0 2px 8px #17461f;
+    }
 
     .status {
       margin-top: 10px;
@@ -144,9 +165,20 @@
     }
 
     @media (max-width: 480px) {
-      .controls { flex-direction: column; gap: 10px; }
-      button { width: 100%; max-width: none; }
-      #wsUrl { font-size: 0.95rem; padding: 10px 12px; }
+      .controls {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      button {
+        width: 100%;
+        max-width: none;
+      }
+
+      #wsUrl {
+        font-size: 0.95rem;
+        padding: 10px 12px;
+      }
     }
   </style>
 </head>
@@ -162,7 +194,7 @@
     </select>
 
     <label for="wsUrl">Server URL</label>
-    <input id="wsUrl" type="text" placeholder="wss://echo.websocket.org" aria-describedby="status" />
+    <input id="wsUrl" type="text" placeholder="ws://localhost:3000 or http://192.168.x.x:3000" aria-describedby="status" />
 
     <div class="controls">
       <button id="connectBtn" aria-live="polite">Connect</button>
@@ -172,7 +204,6 @@
     <label for="messageInput" style="margin-top: 6px;">Message to send</label>
     <input id="messageInput" type="text" placeholder="Type message here..." disabled />
 
-    <!-- NEW: Socket.IO Event Name input -->
     <label for="eventInput" style="margin-top: 6px;">Socket.IO Event Name</label>
     <input id="eventInput" type="text" placeholder="chat" disabled />
 
@@ -180,14 +211,14 @@
       <button id="sendBtn" disabled>Send</button>
     </div>
 
+    <label style="margin-top: 4px;"><input type="checkbox" id="forceWs" disabled> Force WebSocket transport (Socket.IO)</label>
+
     <div id="messages" role="log" aria-live="polite" aria-relevant="additions" tabindex="0" aria-label="WebSocket message log"></div>
 
     <div class="status" id="status" aria-live="polite" aria-atomic="true">Disconnected</div>
   </div>
 
-  <!-- Socket.IO client library -->
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-
   <script>
     const wsUrlInput = document.getElementById('wsUrl');
     const protocolSelect = document.getElementById('protocolSelect');
@@ -196,102 +227,93 @@
     const messageInput = document.getElementById('messageInput');
     const eventInput = document.getElementById('eventInput');
     const sendBtn = document.getElementById('sendBtn');
+    const forceWs = document.getElementById('forceWs');
     const messages = document.getElementById('messages');
     const status = document.getElementById('status');
 
-    let ws = null;       // WebSocket
-    let socket = null;   // Socket.IO
+    let ws = null;
+    let socket = null;
 
-    function logMessage(msg, type='received') {
+    function logMessage(msg,type='received'){
       const div = document.createElement('div');
       div.textContent = msg;
-      div.className = 'message ' + type;
+      div.className='message '+type;
       messages.appendChild(div);
       messages.scrollTop = messages.scrollHeight;
     }
 
-    function setStatus(text, color='#a1b2d9') {
-      status.textContent = text;
-      status.style.color = color;
+    function setStatus(text,color='#a1b2d9'){
+      status.textContent=text;
+      status.style.color=color;
     }
 
-    connectBtn.addEventListener('click', () => {
+    function toggleControls(connected){
+      disconnectBtn.disabled = !connected;
+      messageInput.disabled = !connected;
+      eventInput.disabled = !connected;
+      sendBtn.disabled = !connected;
+      forceWs.disabled = !connected || protocolSelect.value!=='io';
+      connectBtn.disabled = connected;
+      wsUrlInput.disabled = connected;
+      protocolSelect.disabled = connected;
+    }
+
+    connectBtn.addEventListener('click', ()=>{
       const url = wsUrlInput.value.trim();
       const protocol = protocolSelect.value;
+      const useForceWs = forceWs.checked;
 
-      if (!url) { alert('Please enter a server URL.'); return; }
+      if(!url){ alert('Enter server URL'); return; }
 
       connectBtn.disabled = true;
       wsUrlInput.disabled = true;
       protocolSelect.disabled = true;
       setStatus('Connecting...', '#f5a623');
 
-      if (protocol === 'ws') {
-        try { ws = new WebSocket(url); } catch (e) { alert('Invalid WebSocket URL.'); resetUI(); return; }
+      if(protocol==='ws'){
+        try { ws=new WebSocket(url); } catch(e){ alert('Invalid WebSocket URL'); toggleControls(false); return; }
+        ws.onopen = ()=>{ setStatus('Connected','#4CAF50'); toggleControls(true); logMessage('Connected via WebSocket'); };
+        ws.onmessage = e=>logMessage(e.data,'received');
+        ws.onclose = ()=>{ setStatus('Disconnected','#a1b2d9'); toggleControls(false); logMessage('WebSocket closed'); ws=null; };
+        ws.onerror = e=>{ setStatus('Error','#e74c3c'); logMessage('WebSocket error'); };
+      } else if(protocol==='io'){
+        try{
+          const opts = useForceWs?{transports:['websocket']}:{};
+          socket = io(url, opts);
+        } catch(e){ alert('Invalid Socket.IO URL'); toggleControls(false); return; }
 
-        ws.onopen = () => {
-          setStatus('Connected', '#4CAF50');
-          toggleControls(true);
-          logMessage('Connected via WebSocket to ' + url);
-        };
-        ws.onmessage = event => logMessage(event.data, 'received');
-        ws.onclose = () => { setStatus('Disconnected', '#a1b2d9'); toggleControls(false); logMessage('WebSocket connection closed'); ws = null; };
-        ws.onerror = err => { setStatus('Error occurred', '#e74c3c'); logMessage('WebSocket error: ' + (err.message || 'Unknown error'), 'received'); };
-      } else if (protocol === 'io') {
-        try { socket = io(url); } catch (e) { alert('Invalid Socket.IO URL.'); resetUI(); return; }
-
-        socket.on('connect', () => { setStatus('Connected', '#4CAF50'); toggleControls(true); logMessage('Connected via Socket.IO to ' + url); });
-        socket.on('disconnect', () => { setStatus('Disconnected', '#a1b2d9'); toggleControls(false); logMessage('Socket.IO disconnected'); socket = null; });
-        socket.on('connect_error', err => { setStatus('Error occurred', '#e74c3c'); logMessage('Socket.IO connection error: ' + err.message); });
-
-        // Listen for all events to display
-        socket.onAny((event, ...args) => {
-          logMessage(`[${event}] ${args.join(' ')}`, 'received');
-        });
+        socket.on('connect', ()=>{ setStatus('Connected','#4CAF50'); toggleControls(true); logMessage('Connected via Socket.IO'); });
+        socket.on('disconnect', ()=>{ setStatus('Disconnected','#a1b2d9'); toggleControls(false); logMessage('Socket.IO disconnected'); socket=null; });
+        socket.on('connect_error', err=>{ setStatus('Error','#e74c3c'); logMessage('Socket.IO connection error: '+err.message); });
+        socket.onAny((event,...args)=>{ logMessage(`[${event}] ${args.join(' ')}`, 'received'); });
       }
     });
 
-    disconnectBtn.addEventListener('click', () => {
-      if (ws) ws.close();
-      if (socket) socket.disconnect();
+    disconnectBtn.addEventListener('click', ()=>{
+      if(ws) ws.close();
+      if(socket) socket.disconnect();
     });
 
-    sendBtn.addEventListener('click', () => {
-      const msg = messageInput.value;
-      if (!msg) return;
+    sendBtn.addEventListener('click', ()=>{
+      const msg = messageInput.value.trim();
+      if(!msg) return;
 
-      if (ws && ws.readyState === WebSocket.OPEN) {
+      if(ws && ws.readyState===WebSocket.OPEN){
         ws.send(msg);
-        logMessage(msg, 'sent');
-      } else if (socket && socket.connected) {
-        const eventName = eventInput.value.trim() || 'chat'; // default event
-        socket.emit(eventName, msg);
-        logMessage(`[${eventName}] ${msg}`, 'sent');
+        logMessage(msg,'sent');
+      } else if(socket && socket.connected){
+        const eventName = eventInput.value.trim() || 'chat';
+        socket.emit(eventName,msg);
+        logMessage(`[${eventName}] ${msg}`,'sent');
       } else {
         alert('Not connected');
       }
 
-      messageInput.value = '';
+      messageInput.value='';
       messageInput.focus();
     });
 
-    messageInput.addEventListener('keypress', e => { if (e.key === 'Enter') sendBtn.click(); });
-
-    function toggleControls(connected) {
-      disconnectBtn.disabled = !connected;
-      messageInput.disabled = !connected;
-      eventInput.disabled = !connected;
-      sendBtn.disabled = !connected;
-      connectBtn.disabled = connected;
-      wsUrlInput.disabled = connected;
-      protocolSelect.disabled = connected;
-    }
-
-    function resetUI() {
-      toggleControls(false);
-      setStatus('Disconnected', '#a1b2d9');
-    }
+    messageInput.addEventListener('keypress', e=>{ if(e.key==='Enter') sendBtn.click(); });
   </script>
-
 </body>
 </html>
