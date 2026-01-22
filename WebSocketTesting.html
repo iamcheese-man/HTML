@@ -247,23 +247,20 @@
       status.style.color=color;
     }
 
-   function toggleControls(connected){
-     // Disconnect only enabled when connected
-     disconnectBtn.disabled = !connected;
+    function toggleControls(connected){
+      disconnectBtn.disabled = !connected;
+      messageInput.disabled = !connected;
+      eventInput.disabled = !connected;
+      sendBtn.disabled = !connected;
 
-     // Message input and send button only when connected
-     messageInput.disabled = !connected;
-     eventInput.disabled = !connected;
-     sendBtn.disabled = !connected;
+      // Force WebSocket: only disabled if protocol isn't io, never disabled during pre-connection
+      forceWs.disabled = protocolSelect.value !== 'io';
 
-     // Force WebSocket transport checkbox: always enabled if protocol is io
-     forceWs.disabled = protocolSelect.value !== 'io';
-
-     // Connect button and server URL only disabled when connected
-     connectBtn.disabled = connected;
-     wsUrlInput.disabled = connected;
-     protocolSelect.disabled = connected;
+      connectBtn.disabled = connected;
+      wsUrlInput.disabled = connected;
+      protocolSelect.disabled = connected;
    }
+
 
 
     connectBtn.addEventListener('click', ()=>{
