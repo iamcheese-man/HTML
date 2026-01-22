@@ -247,16 +247,24 @@
       status.style.color=color;
     }
 
-    function toggleControls(connected){
-      disconnectBtn.disabled = !connected;
-      messageInput.disabled = !connected;
-      eventInput.disabled = !connected;
-      sendBtn.disabled = !connected;
-      forceWs.disabled = !connected || protocolSelect.value!=='io';
-      connectBtn.disabled = connected;
-      wsUrlInput.disabled = connected;
-      protocolSelect.disabled = connected;
-    }
+   function toggleControls(connected){
+     // Disconnect only enabled when connected
+     disconnectBtn.disabled = !connected;
+
+     // Message input and send button only when connected
+     messageInput.disabled = !connected;
+     eventInput.disabled = !connected;
+     sendBtn.disabled = !connected;
+
+     // Force WebSocket transport checkbox: always enabled if protocol is io
+     forceWs.disabled = protocolSelect.value !== 'io';
+
+     // Connect button and server URL only disabled when connected
+     connectBtn.disabled = connected;
+     wsUrlInput.disabled = connected;
+     protocolSelect.disabled = connected;
+   }
+
 
     connectBtn.addEventListener('click', ()=>{
       const url = wsUrlInput.value.trim();
