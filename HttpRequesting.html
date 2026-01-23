@@ -561,57 +561,49 @@
     statusMessage.className = '';
 
     try {
-      const response = await fetch(urlToFetch, fetchOptions);
+  const response = await fetch(urlToFetch, fetchOptions);
 
-      responseStatus.textContent = `Status: ${response.status} ${response.statusText}`;
+  // If HTTP status indicates error, throw so we can show reason
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => '');
+    throw new Error(`HTTP ${response.status} ${response.statusText}${errorText ? ' — ' + errorText : ''}`);
+  }
 
-      const respHeaders = formatHeaders(response.headers);
-      responseHeaders.textContent = 'Response Headers:\n' + respHeaders;
+  // ---- Existing code for handling response ----
+  responseStatus.textContent = `Status: ${response.status} ${response.statusText}`;
+  const respHeaders = formatHeaders(response.headers);
+  responseHeaders.textContent = 'Response Headers:\n' + respHeaders;
 
-      const contentType = response.headers.get('content-type') || '';
+  const contentType = response.headers.get('content-type') || '';
+  if (contentType.startsWith('application/json') || contentType.includes('json') || contentType.includes('text')) {
+    const text = await response.text();
+    const prettyJson = tryParseJSON(text);
+    responseBody.textContent = prettyJson || text;
+  } else {
+    const blob = await response.blob();
+    const fileUrl = URL.createObjectURL(blob);
+    responseBody.innerHTML = `<a href="${fileUrl}" class="download-link" download="file">Download File (${contentType})</a>`;
+  }
 
-      if (contentType.startsWith('application/json') || contentType.includes('json') || contentType.includes('text')) {
-        const text = await response.text();
-        const prettyJson = tryParseJSON(text);
-        responseBody.textContent = prettyJson || text;
+  statusMessage.textContent = 'Request completed successfully.';
+  statusMessage.className = 'success';
 
-      } else if (contentType.startsWith('image/')) {
-        const blob = await response.blob();
-        const imgUrl = URL.createObjectURL(blob);
-        responseBody.innerHTML = `<img src="${imgUrl}" alt="Image preview" />`;
+  // Save to history
+  saveRequestToHistory({
+    url: urlToFetch,
+    originalUrl,
+    proxyUrl,
+    method,
+    headers,
+    body: bodyRaw
+  });
 
-      } else if (contentType.startsWith('video/')) {
-        const blob = await response.blob();
-        const videoUrl = URL.createObjectURL(blob);
-        responseBody.innerHTML = `<video controls src="${videoUrl}"></video>`;
-
-      } else if (contentType.startsWith('audio/')) {
-        const blob = await response.blob();
-        const audioUrl = URL.createObjectURL(blob);
-        responseBody.innerHTML = `<audio controls src="${audioUrl}"></audio>`;
-
-      } else if (contentType === 'application/pdf') {
-        const blob = await response.blob();
-        const pdfUrl = URL.createObjectURL(blob);
-        responseBody.innerHTML = `<iframe src="${pdfUrl}" width="100%" height="600px" style="border:none;"></iframe>`;
-
-      } else {
-        // Fallback for other types
-        const blob = await response.blob();
-        const fileUrl = URL.createObjectURL(blob);
-
-        // Try to get text preview if possible
-        let textPreview = '';
-        try {
-          textPreview = await blob.text();
-        } catch {}
-
-        let html = `<a href="${fileUrl}" class="download-link" download="file">Download File (${contentType})</a>`;
-        if (textPreview && textPreview.length < 10000) {
-          html += `<pre>${escapeHtml(textPreview)}</pre>`;
-        }
-        responseBody.innerHTML = html;
-      }
+} catch (error) {
+  // Show detailed error
+  statusMessage.textContent = 'Request failed: ' + error.message;
+  statusMessage.className = 'error';
+  stopRepeating();
+}
 
       statusMessage.textContent = 'Request completed successfully.';
       statusMessage.className = 'success';
