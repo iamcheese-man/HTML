@@ -55,13 +55,128 @@
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   }
   
+  .settings-toggle {
+    background: rgba(102, 126, 234, 0.1);
+    border: 1px solid rgba(102, 126, 234, 0.3);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .settings-toggle:hover {
+    background: rgba(102, 126, 234, 0.15);
+  }
+  
+  .settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .settings-content {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .setting-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .setting-row label {
+    flex: 1;
+    color: #9ca3af;
+    font-size: 14px;
+  }
+  
+  .toggle-switch {
+    position: relative;
+    width: 50px;
+    height: 26px;
+  }
+  
+  .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  
+  .toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.1);
+    transition: 0.3s;
+    border-radius: 26px;
+  }
+  
+  .toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+  }
+  
+  input:checked + .toggle-slider {
+    background-color: #667eea;
+  }
+  
+  input:checked + .toggle-slider:before {
+    transform: translateX(24px);
+  }
+  
+  .proxy-input {
+    width: 100%;
+    padding: 10px;
+    background: rgba(20, 20, 35, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: #e8eaed;
+    font-size: 14px;
+    font-family: 'Courier New', monospace;
+  }
+  
+  .proxy-input::placeholder {
+    color: #6b7280;
+  }
+  
+  .proxy-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    background: rgba(74, 222, 128, 0.15);
+    border: 1px solid rgba(74, 222, 128, 0.3);
+    border-radius: 6px;
+    font-size: 12px;
+    color: #4ade80;
+    font-weight: 600;
+  }
+  
+  .proxy-badge.disabled {
+    background: rgba(156, 163, 175, 0.15);
+    border-color: rgba(156, 163, 175, 0.3);
+    color: #9ca3af;
+  }
+  
   .input-group {
     display: flex;
     gap: 12px;
     margin-bottom: 20px;
   }
   
-  input {
+  input[type="text"] {
     flex: 1;
     padding: 14px 18px;
     font-size: 16px;
@@ -72,13 +187,13 @@
     transition: all 0.3s ease;
   }
   
-  input:focus {
+  input[type="text"]:focus {
     outline: none;
     border-color: #667eea;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
   }
   
-  input::placeholder {
+  input[type="text"]::placeholder {
     color: #6b7280;
   }
   
@@ -223,10 +338,41 @@
     line-height: 1.5;
   }
   
+  .http-headers {
+    background: rgba(20, 20, 35, 0.6);
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 15px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  
+  .http-headers h4 {
+    margin-bottom: 10px;
+    color: #a5b4fc;
+    font-family: system-ui;
+  }
+  
+  .header-line {
+    padding: 3px 0;
+    color: #9ca3af;
+  }
+  
+  .header-key {
+    color: #60a5fa;
+  }
+  
   .ok { color: #4ade80; border-color: #4ade80; }
   .warn { color: #facc15; border-color: #facc15; }
   .bad { color: #f87171; border-color: #f87171; }
   .checking { color: #60a5fa; border-color: #60a5fa; }
+  
+  .status-2xx { color: #4ade80; }
+  .status-3xx { color: #60a5fa; }
+  .status-4xx { color: #fb923c; }
+  .status-5xx { color: #f87171; }
   
   .history-section {
     margin-top: 30px;
@@ -281,20 +427,27 @@
     font-weight: 500;
   }
   
+  .history-meta {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+  
+  .history-status-code {
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    padding: 4px 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+  }
+  
   .history-time {
     color: #9ca3af;
     font-size: 0.85em;
-    margin: 0 15px;
   }
   
   .history-status {
     font-size: 20px;
-  }
-  
-  .empty-state {
-    text-align: center;
-    padding: 40px;
-    color: #6b7280;
   }
   
   .loader {
@@ -334,8 +487,9 @@
       gap: 8px;
     }
     
-    .history-time {
-      margin: 0;
+    .history-meta {
+      width: 100%;
+      justify-content: space-between;
     }
   }
 </style>
@@ -348,6 +502,66 @@
   </header>
   
   <div class="check-form">
+    <div class="settings-toggle" onclick="toggleSettings()">
+      <div class="settings-header">
+        <div>
+          <strong>⚙️ Settings</strong>
+          <span class="proxy-badge" id="proxyBadge">Proxy Disabled</span>
+        </div>
+        <span id="settingsArrow">▼</span>
+      </div>
+      <div class="settings-content" id="settingsContent" style="display: none;">
+        <div class="setting-row">
+          <label>
+            <strong>Use Cloudflare Proxy</strong><br>
+            <small>Get real HTTP status codes, headers, and response bodies</small>
+          </label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="useProxy" onchange="toggleProxy()">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div id="proxyUrlSection" style="display: none;">
+          <label style="display: block; margin-bottom: 8px; color: #9ca3af; font-size: 14px;">
+            Proxy URL:
+          </label>
+          <input 
+            type="text" 
+            class="proxy-input" 
+            id="proxyUrl" 
+            placeholder="https://your-worker.your-subdomain.workers.dev"
+            onchange="saveProxySettings()"
+          >
+          
+          <label style="display: block; margin-top: 15px; margin-bottom: 8px; color: #9ca3af; font-size: 14px;">
+            Auth Header Name (optional):
+          </label>
+          <input 
+            type="text" 
+            class="proxy-input" 
+            id="authHeaderName" 
+            placeholder="X-CFProxy-Auth"
+            onchange="saveProxySettings()"
+          >
+          
+          <label style="display: block; margin-top: 15px; margin-bottom: 8px; color: #9ca3af; font-size: 14px;">
+            Auth Header Value (optional):
+          </label>
+          <input 
+            type="password" 
+            class="proxy-input" 
+            id="authHeaderValue" 
+            placeholder="Your authentication token"
+            onchange="saveProxySettings()"
+          >
+          
+          <p style="margin-top: 10px; color: #6b7280; font-size: 12px;">
+            💡 Deploy a Cloudflare Worker to proxy requests and bypass CORS
+          </p>
+        </div>
+      </div>
+    </div>
+    
     <div class="input-group">
       <input 
         id="domain" 
@@ -385,6 +599,72 @@
 
 <script>
 let checkHistory = JSON.parse(localStorage.getItem('checkHistory') || '[]');
+let useProxyMode = localStorage.getItem('useProxy') === 'true' || true; // Default to true
+let proxyUrl = localStorage.getItem('proxyUrl') || 'https://cfproxy.zerdgeservers.workers.dev';
+let authHeaderName = localStorage.getItem('authHeaderName') || 'X-CFProxy-Auth';
+let authHeaderValue = localStorage.getItem('authHeaderValue') || 'A53xR14L390';
+
+// Save defaults to localStorage if not already set
+if (!localStorage.getItem('proxyUrl')) {
+  localStorage.setItem('useProxy', 'true');
+  localStorage.setItem('proxyUrl', proxyUrl);
+  localStorage.setItem('authHeaderName', authHeaderName);
+  localStorage.setItem('authHeaderValue', authHeaderValue);
+}
+
+// Initialize settings
+document.getElementById('useProxy').checked = useProxyMode;
+document.getElementById('proxyUrl').value = proxyUrl;
+document.getElementById('authHeaderName').value = authHeaderName;
+document.getElementById('authHeaderValue').value = authHeaderValue;
+if (useProxyMode) {
+  document.getElementById('proxyUrlSection').style.display = 'block';
+  updateProxyBadge();
+}
+
+function toggleSettings() {
+  const content = document.getElementById('settingsContent');
+  const arrow = document.getElementById('settingsArrow');
+  if (content.style.display === 'none') {
+    content.style.display = 'block';
+    arrow.textContent = '▲';
+  } else {
+    content.style.display = 'none';
+    arrow.textContent = '▼';
+  }
+}
+
+function toggleProxy() {
+  useProxyMode = document.getElementById('useProxy').checked;
+  localStorage.setItem('useProxy', useProxyMode);
+  document.getElementById('proxyUrlSection').style.display = useProxyMode ? 'block' : 'none';
+  updateProxyBadge();
+}
+
+function saveProxySettings() {
+  proxyUrl = document.getElementById('proxyUrl').value.trim();
+  authHeaderName = document.getElementById('authHeaderName').value.trim();
+  authHeaderValue = document.getElementById('authHeaderValue').value.trim();
+  
+  localStorage.setItem('proxyUrl', proxyUrl);
+  localStorage.setItem('authHeaderName', authHeaderName);
+  localStorage.setItem('authHeaderValue', authHeaderValue);
+  updateProxyBadge();
+}
+
+function updateProxyBadge() {
+  const badge = document.getElementById('proxyBadge');
+  if (useProxyMode && proxyUrl) {
+    badge.textContent = 'Proxy Enabled';
+    badge.className = 'proxy-badge';
+  } else if (useProxyMode && !proxyUrl) {
+    badge.textContent = 'Proxy URL Missing';
+    badge.className = 'proxy-badge disabled';
+  } else {
+    badge.textContent = 'Proxy Disabled';
+    badge.className = 'proxy-badge disabled';
+  }
+}
 
 // Handle Enter key
 document.getElementById('domain').addEventListener('keypress', (e) => {
@@ -414,6 +694,7 @@ async function checkSite() {
   btnLoader.style.display = 'inline-block';
   
   // Show checking state
+  const mode = useProxyMode && proxyUrl ? 'proxy' : 'no-cors';
   result.innerHTML = `
     <div class="result-card">
       <div class="status-header">
@@ -424,11 +705,88 @@ async function checkSite() {
         </div>
       </div>
       <div class="status-note">
-        Performing DNS lookup, TLS handshake, and HTTP connection test...
+        ${mode === 'proxy' 
+          ? 'Using proxy to fetch full HTTP response with status codes and headers...' 
+          : 'Performing DNS lookup, TLS handshake, and HTTP connection test...'}
       </div>
     </div>
   `;
   
+  if (useProxyMode && proxyUrl) {
+    await checkViaProxy(input);
+  } else {
+    await checkNoCors(input);
+  }
+  
+  // Re-enable button
+  btn.disabled = false;
+  btnText.style.display = 'inline';
+  btnLoader.style.display = 'none';
+}
+
+async function checkViaProxy(input) {
+  const url = input.startsWith("http") ? input : "https://" + input;
+  const start = performance.now();
+  
+  try {
+    const proxyRequest = `${proxyUrl}?url=${encodeURIComponent(url)}`;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+    
+    // Build headers object
+    const headers = {
+      'Content-Type': 'application/json'
+    };
+    
+    // Add auth header if configured
+    if (authHeaderName && authHeaderValue) {
+      headers[authHeaderName] = authHeaderValue;
+    }
+    
+    const res = await fetch(proxyRequest, {
+      signal: controller.signal,
+      headers: headers
+    });
+    
+    clearTimeout(timeout);
+    const responseTime = Math.round(performance.now() - start);
+    
+    // Check if proxy returned an error (401, 403, etc.)
+    if (!res.ok && res.status === 401) {
+      showProxyError(input, url, 'Authentication failed - check your auth credentials', responseTime);
+      addToHistory(input, 'error', responseTime, null);
+      return;
+    }
+    
+    if (!res.ok && res.status === 403) {
+      showProxyError(input, url, 'Forbidden - invalid authentication token', responseTime);
+      addToHistory(input, 'error', responseTime, null);
+      return;
+    }
+    
+    const data = await res.json();
+    
+    if (data.error) {
+      showProxyError(input, url, data.error, responseTime);
+      addToHistory(input, 'error', responseTime, null);
+    } else {
+      showProxySuccess(input, url, data, responseTime);
+      addToHistory(input, 'ok', responseTime, data.status);
+    }
+    
+  } catch (e) {
+    const responseTime = Math.round(performance.now() - start);
+    if (e.name === "AbortError") {
+      showTimeout(input, url);
+      addToHistory(input, 'timeout', responseTime, null);
+    } else {
+      showError(input, url, e.message);
+      addToHistory(input, 'error', responseTime, null);
+    }
+  }
+}
+
+async function checkNoCors(input) {
   const url = input.startsWith("http") ? input : "https://" + input;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10000);
@@ -443,7 +801,7 @@ async function checkSite() {
     const responseTime = Math.round(performance.now() - start);
     
     showSuccess(input, url, responseTime);
-    addToHistory(input, 'ok', responseTime);
+    addToHistory(input, 'ok', responseTime, null);
     
   } catch (e) {
     clearTimeout(timeout);
@@ -451,17 +809,111 @@ async function checkSite() {
     
     if (e.name === "AbortError") {
       showTimeout(input, url);
-      addToHistory(input, 'timeout', responseTime);
+      addToHistory(input, 'timeout', responseTime, null);
     } else {
       showError(input, url, e.message);
-      addToHistory(input, 'error', responseTime);
+      addToHistory(input, 'error', responseTime, null);
     }
-  } finally {
-    // Re-enable button
-    btn.disabled = false;
-    btnText.style.display = 'inline';
-    btnLoader.style.display = 'none';
   }
+}
+
+function showProxySuccess(domain, url, data, time) {
+  const statusClass = data.status >= 200 && data.status < 300 ? 'status-2xx' : 
+                     data.status >= 300 && data.status < 400 ? 'status-3xx' :
+                     data.status >= 400 && data.status < 500 ? 'status-4xx' : 'status-5xx';
+  
+  const timeClass = time < 500 ? '#4ade80' : time < 1500 ? '#facc15' : '#fb923c';
+  const timeLabel = time < 500 ? 'Excellent' : time < 1500 ? 'Good' : 'Acceptable';
+  
+  const isSuccess = data.status >= 200 && data.status < 400;
+  
+  let headersHTML = '';
+  if (data.headers && Object.keys(data.headers).length > 0) {
+    headersHTML = `
+      <div class="http-headers">
+        <h4>Response Headers</h4>
+        ${Object.entries(data.headers).map(([key, value]) => 
+          `<div class="header-line"><span class="header-key">${key}:</span> ${value}</div>`
+        ).join('')}
+      </div>
+    `;
+  }
+  
+  document.getElementById("result").innerHTML = `
+    <div class="result-card">
+      <div class="status-header">
+        <div class="status-icon">${isSuccess ? '✅' : '⚠️'}</div>
+        <div class="status-text">
+          <div class="status-title ${isSuccess ? 'ok' : 'warn'}">${isSuccess ? 'Site is Online' : 'Site Responded with Error'}</div>
+          <div class="status-url">${domain}</div>
+        </div>
+      </div>
+      
+      <div class="metrics-grid">
+        <div class="metric">
+          <div class="metric-label">HTTP Status</div>
+          <div class="metric-value ${statusClass}">${data.status} ${data.statusText || ''}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Response Time</div>
+          <div class="metric-value" style="color: ${timeClass}">${time} ms</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Connection</div>
+          <div class="metric-value ok">${timeLabel}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Checked At</div>
+          <div class="metric-value" style="color: #9ca3af; font-size: 1em;">${new Date().toLocaleTimeString()}</div>
+        </div>
+      </div>
+      
+      ${headersHTML}
+      
+      <div class="status-note">
+        ✓ Full HTTP response retrieved via proxy<br>
+        ✓ Real status code: ${data.status}<br>
+        ✓ CORS bypassed successfully<br>
+        ${data.contentLength ? `✓ Content-Length: ${data.contentLength} bytes<br>` : ''}
+        <br>
+        <em>Via Cloudflare Workers proxy - full details available</em>
+      </div>
+    </div>
+  `;
+}
+
+function showProxyError(domain, url, error, time) {
+  document.getElementById("result").innerHTML = `
+    <div class="result-card">
+      <div class="status-header">
+        <div class="status-icon">❌</div>
+        <div class="status-text">
+          <div class="status-title bad">Proxy Error</div>
+          <div class="status-url">${domain}</div>
+        </div>
+      </div>
+      
+      <div class="metrics-grid">
+        <div class="metric">
+          <div class="metric-label">Status</div>
+          <div class="metric-value bad">Error</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Time</div>
+          <div class="metric-value" style="color: #9ca3af">${time} ms</div>
+        </div>
+      </div>
+      
+      <div class="status-note">
+        Error from proxy: ${error}<br>
+        <br>
+        This could indicate:<br>
+        • The target site is down<br>
+        • Network/DNS failure<br>
+        • Proxy configuration issue
+      </div>
+    </div>
+  `;
 }
 
 function showSuccess(domain, url, time) {
@@ -502,7 +954,8 @@ function showSuccess(domain, url, time) {
         ✓ TLS handshake completed<br>
         ✓ HTTP connection established<br>
         <br>
-        <em>Note: Using no-cors mode for compatibility - actual HTTP status code not available</em>
+        <em>Note: Using no-cors mode - actual HTTP status code not available.<br>
+        Enable proxy mode in settings for full response details.</em>
       </div>
     </div>
   `;
@@ -543,7 +996,6 @@ function showTimeout(domain, url) {
 
 function showError(domain, url, message) {
   if (!url) {
-    // Validation error
     document.getElementById("result").innerHTML = `
       <div class="result-card">
         <div class="status-header">
@@ -591,19 +1043,17 @@ function showError(domain, url, message) {
   `;
 }
 
-function addToHistory(domain, status, time) {
+function addToHistory(domain, status, time, statusCode) {
   const entry = {
     domain,
     status,
     time,
+    statusCode,
     timestamp: Date.now()
   };
   
-  // Remove duplicates and add to front
   checkHistory = checkHistory.filter(item => item.domain !== domain);
   checkHistory.unshift(entry);
-  
-  // Keep only last 10
   checkHistory = checkHistory.slice(0, 10);
   
   localStorage.setItem('checkHistory', JSON.stringify(checkHistory));
@@ -622,11 +1072,22 @@ function renderHistory() {
     const icon = item.status === 'ok' ? '✅' : item.status === 'timeout' ? '⚠️' : '❌';
     const timeAgo = getTimeAgo(item.timestamp);
     
+    let statusCodeHTML = '';
+    if (item.statusCode) {
+      const statusClass = item.statusCode >= 200 && item.statusCode < 300 ? 'status-2xx' : 
+                         item.statusCode >= 300 && item.statusCode < 400 ? 'status-3xx' :
+                         item.statusCode >= 400 && item.statusCode < 500 ? 'status-4xx' : 'status-5xx';
+      statusCodeHTML = `<span class="history-status-code ${statusClass}">${item.statusCode}</span>`;
+    }
+    
     return `
       <div class="history-item" onclick="quickCheck('${item.domain}')">
         <div class="history-domain">${item.domain}</div>
-        <div class="history-time">${timeAgo}</div>
-        <div class="history-status">${icon}</div>
+        <div class="history-meta">
+          ${statusCodeHTML}
+          <div class="history-time">${timeAgo}</div>
+          <div class="history-status">${icon}</div>
+        </div>
       </div>
     `;
   }).join('');
