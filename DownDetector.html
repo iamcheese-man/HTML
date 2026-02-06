@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Site Status Checker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+    color: #e8eaed;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding-top: 20px;
+  }
+  
+  h1 {
+    font-size: 2.5em;
+    font-weight: 700;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .subtitle {
+    color: #9ca3af;
+    font-size: 1em;
+  }
+  
+  .check-form {
+    background: rgba(30, 30, 45, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+  
+  .input-group {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  
+  input {
+    flex: 1;
+    padding: 14px 18px;
+    font-size: 16px;
+    background: rgba(20, 20, 35, 0.8);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: #e8eaed;
+    transition: all 0.3s ease;
+  }
+  
+  input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  }
+  
+  input::placeholder {
+    color: #6b7280;
+  }
+  
+  button {
+    padding: 14px 32px;
+    font-size: 16px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+  }
+  
+  button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  }
+  
+  button:active {
+    transform: translateY(0);
+  }
+  
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  .popular-sites {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 15px;
+  }
+  
+  .popular-sites span {
+    color: #9ca3af;
+    font-size: 14px;
+    margin-right: 8px;
+  }
+  
+  .site-chip {
+    padding: 6px 12px;
+    background: rgba(102, 126, 234, 0.15);
+    border: 1px solid rgba(102, 126, 234, 0.3);
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #a5b4fc;
+  }
+  
+  .site-chip:hover {
+    background: rgba(102, 126, 234, 0.25);
+    border-color: rgba(102, 126, 234, 0.5);
+  }
+  
+  .result-card {
+    background: rgba(30, 30, 45, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 30px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    animation: fadeIn 0.4s ease forwards;
+  }
+  
+  @keyframes fadeIn {
+    to { opacity: 1; }
+  }
+  
+  .status-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+  
+  .status-icon {
+    font-size: 48px;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+  
+  .status-text {
+    flex: 1;
+  }
+  
+  .status-title {
+    font-size: 1.5em;
+    font-weight: 600;
+    margin-bottom: 5px;
+  }
+  
+  .status-url {
+    color: #9ca3af;
+    font-size: 0.9em;
+    word-break: break-all;
+  }
+  
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+  }
+  
+  .metric {
+    background: rgba(20, 20, 35, 0.6);
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  
+  .metric-label {
+    color: #9ca3af;
+    font-size: 0.85em;
+    margin-bottom: 5px;
+  }
+  
+  .metric-value {
+    font-size: 1.3em;
+    font-weight: 600;
+  }
+  
+  .status-note {
+    background: rgba(20, 20, 35, 0.4);
+    padding: 15px;
+    border-radius: 10px;
+    border-left: 3px solid rgba(102, 126, 234, 0.5);
+    color: #9ca3af;
+    font-size: 0.9em;
+    line-height: 1.5;
+  }
+  
+  .ok { color: #4ade80; border-color: #4ade80; }
+  .warn { color: #facc15; border-color: #facc15; }
+  .bad { color: #f87171; border-color: #f87171; }
+  .checking { color: #60a5fa; border-color: #60a5fa; }
+  
+  .history-section {
+    margin-top: 30px;
+  }
+  
+  .history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+  
+  .history-title {
+    font-size: 1.2em;
+    font-weight: 600;
+  }
+  
+  .clear-btn {
+    padding: 8px 16px;
+    font-size: 14px;
+    background: rgba(248, 113, 113, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(248, 113, 113, 0.3);
+  }
+  
+  .clear-btn:hover {
+    background: rgba(248, 113, 113, 0.25);
+    box-shadow: none;
+    transform: none;
+  }
+  
+  .history-item {
+    background: rgba(30, 30, 45, 0.4);
+    padding: 15px 20px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  
+  .history-item:hover {
+    background: rgba(30, 30, 45, 0.6);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .history-domain {
+    flex: 1;
+    font-weight: 500;
+  }
+  
+  .history-time {
+    color: #9ca3af;
+    font-size: 0.85em;
+    margin: 0 15px;
+  }
+  
+  .history-status {
+    font-size: 20px;
+  }
+  
+  .empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #6b7280;
+  }
+  
+  .loader {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(102, 126, 234, 0.3);
+    border-radius: 50%;
+    border-top-color: #667eea;
+    animation: spin 0.8s linear infinite;
+  }
+  
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  
+  @media (max-width: 600px) {
+    h1 {
+      font-size: 2em;
+    }
+    
+    .input-group {
+      flex-direction: column;
+    }
+    
+    button {
+      width: 100%;
+    }
+    
+    .metrics-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .history-item {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    
+    .history-time {
+      margin: 0;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🌐 Site Status Checker</h1>
+    <p class="subtitle">Real-time availability monitoring with DNS, HTTPS, and latency checks</p>
+  </header>
+  
+  <div class="check-form">
+    <div class="input-group">
+      <input 
+        id="domain" 
+        type="text"
+        placeholder="Enter domain (e.g., google.com)" 
+        autocomplete="off"
+        autofocus
+      >
+      <button id="checkBtn" onclick="checkSite()">
+        <span id="btnText">Check Status</span>
+        <span id="btnLoader" style="display: none;" class="loader"></span>
+      </button>
+    </div>
+    
+    <div class="popular-sites">
+      <span>Quick check:</span>
+      <div class="site-chip" onclick="quickCheck('google.com')">Google</div>
+      <div class="site-chip" onclick="quickCheck('github.com')">GitHub</div>
+      <div class="site-chip" onclick="quickCheck('twitter.com')">Twitter</div>
+      <div class="site-chip" onclick="quickCheck('reddit.com')">Reddit</div>
+      <div class="site-chip" onclick="quickCheck('amazon.com')">Amazon</div>
+    </div>
+  </div>
+  
+  <div id="result"></div>
+  
+  <div id="historySection" class="history-section" style="display: none;">
+    <div class="history-header">
+      <div class="history-title">Recent Checks</div>
+      <button class="clear-btn" onclick="clearHistory()">Clear History</button>
+    </div>
+    <div id="historyList"></div>
+  </div>
+</div>
+
+<script>
+let checkHistory = JSON.parse(localStorage.getItem('checkHistory') || '[]');
+
+// Handle Enter key
+document.getElementById('domain').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') checkSite();
+});
+
+function quickCheck(domain) {
+  document.getElementById('domain').value = domain;
+  checkSite();
+}
+
+async function checkSite() {
+  const input = document.getElementById("domain").value.trim();
+  const result = document.getElementById("result");
+  const btn = document.getElementById("checkBtn");
+  const btnText = document.getElementById("btnText");
+  const btnLoader = document.getElementById("btnLoader");
+  
+  if (!input) {
+    showError("Please enter a domain name");
+    return;
+  }
+  
+  // Disable button and show loader
+  btn.disabled = true;
+  btnText.style.display = 'none';
+  btnLoader.style.display = 'inline-block';
+  
+  // Show checking state
+  result.innerHTML = `
+    <div class="result-card">
+      <div class="status-header">
+        <div class="status-icon">⏳</div>
+        <div class="status-text">
+          <div class="status-title checking">Checking Status...</div>
+          <div class="status-url">${input}</div>
+        </div>
+      </div>
+      <div class="status-note">
+        Performing DNS lookup, TLS handshake, and HTTP connection test...
+      </div>
+    </div>
+  `;
+  
+  const url = input.startsWith("http") ? input : "https://" + input;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  const start = performance.now();
+  
+  try {
+    const res = await fetch(url, {
+      mode: "no-cors",
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+    const responseTime = Math.round(performance.now() - start);
+    
+    showSuccess(input, url, responseTime);
+    addToHistory(input, 'ok', responseTime);
+    
+  } catch (e) {
+    clearTimeout(timeout);
+    const responseTime = Math.round(performance.now() - start);
+    
+    if (e.name === "AbortError") {
+      showTimeout(input, url);
+      addToHistory(input, 'timeout', responseTime);
+    } else {
+      showError(input, url, e.message);
+      addToHistory(input, 'error', responseTime);
+    }
+  } finally {
+    // Re-enable button
+    btn.disabled = false;
+    btnText.style.display = 'inline';
+    btnLoader.style.display = 'none';
+  }
+}
+
+function showSuccess(domain, url, time) {
+  const statusClass = time < 500 ? 'Excellent' : time < 1500 ? 'Good' : 'Acceptable';
+  const statusColor = time < 500 ? '#4ade80' : time < 1500 ? '#facc15' : '#fb923c';
+  
+  document.getElementById("result").innerHTML = `
+    <div class="result-card">
+      <div class="status-header">
+        <div class="status-icon">✅</div>
+        <div class="status-text">
+          <div class="status-title ok">Site is Online</div>
+          <div class="status-url">${domain}</div>
+        </div>
+      </div>
+      
+      <div class="metrics-grid">
+        <div class="metric">
+          <div class="metric-label">Response Time</div>
+          <div class="metric-value" style="color: ${statusColor}">${time} ms</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Connection</div>
+          <div class="metric-value ok">${statusClass}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Protocol</div>
+          <div class="metric-value" style="color: #9ca3af">HTTPS</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Checked At</div>
+          <div class="metric-value" style="color: #9ca3af; font-size: 1em;">${new Date().toLocaleTimeString()}</div>
+        </div>
+      </div>
+      
+      <div class="status-note">
+        ✓ DNS resolution successful<br>
+        ✓ TLS handshake completed<br>
+        ✓ HTTP connection established<br>
+        <br>
+        <em>Note: Using no-cors mode for compatibility - actual HTTP status code not available</em>
+      </div>
+    </div>
+  `;
+}
+
+function showTimeout(domain, url) {
+  document.getElementById("result").innerHTML = `
+    <div class="result-card">
+      <div class="status-header">
+        <div class="status-icon">⚠️</div>
+        <div class="status-text">
+          <div class="status-title warn">Connection Timeout</div>
+          <div class="status-url">${domain}</div>
+        </div>
+      </div>
+      
+      <div class="metrics-grid">
+        <div class="metric">
+          <div class="metric-label">Status</div>
+          <div class="metric-value warn">Slow/Degraded</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Timeout</div>
+          <div class="metric-value" style="color: #9ca3af">10 seconds</div>
+        </div>
+      </div>
+      
+      <div class="status-note">
+        The site didn't respond within 10 seconds. This could indicate:<br>
+        • Server is experiencing high load<br>
+        • Network congestion or routing issues<br>
+        • Firewall blocking requests<br>
+        • Site is partially down or degraded
+      </div>
+    </div>
+  `;
+}
+
+function showError(domain, url, message) {
+  if (!url) {
+    // Validation error
+    document.getElementById("result").innerHTML = `
+      <div class="result-card">
+        <div class="status-header">
+          <div class="status-icon">⚠️</div>
+          <div class="status-text">
+            <div class="status-title warn">Invalid Input</div>
+          </div>
+        </div>
+        <div class="status-note">${domain}</div>
+      </div>
+    `;
+    return;
+  }
+  
+  document.getElementById("result").innerHTML = `
+    <div class="result-card">
+      <div class="status-header">
+        <div class="status-icon">❌</div>
+        <div class="status-text">
+          <div class="status-title bad">Site Unreachable</div>
+          <div class="status-url">${domain}</div>
+        </div>
+      </div>
+      
+      <div class="metrics-grid">
+        <div class="metric">
+          <div class="metric-label">Status</div>
+          <div class="metric-value bad">Offline</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Error Type</div>
+          <div class="metric-value" style="color: #9ca3af; font-size: 0.9em;">${message}</div>
+        </div>
+      </div>
+      
+      <div class="status-note">
+        Unable to reach the site. Possible causes:<br>
+        • DNS lookup failed (domain doesn't exist)<br>
+        • TLS/SSL certificate issues<br>
+        • Network connectivity problems<br>
+        • Server is completely down<br>
+        • Domain name typo
+      </div>
+    </div>
+  `;
+}
+
+function addToHistory(domain, status, time) {
+  const entry = {
+    domain,
+    status,
+    time,
+    timestamp: Date.now()
+  };
+  
+  // Remove duplicates and add to front
+  checkHistory = checkHistory.filter(item => item.domain !== domain);
+  checkHistory.unshift(entry);
+  
+  // Keep only last 10
+  checkHistory = checkHistory.slice(0, 10);
+  
+  localStorage.setItem('checkHistory', JSON.stringify(checkHistory));
+  renderHistory();
+}
+
+function renderHistory() {
+  if (checkHistory.length === 0) {
+    document.getElementById('historySection').style.display = 'none';
+    return;
+  }
+  
+  document.getElementById('historySection').style.display = 'block';
+  
+  const historyHTML = checkHistory.map(item => {
+    const icon = item.status === 'ok' ? '✅' : item.status === 'timeout' ? '⚠️' : '❌';
+    const timeAgo = getTimeAgo(item.timestamp);
+    
+    return `
+      <div class="history-item" onclick="quickCheck('${item.domain}')">
+        <div class="history-domain">${item.domain}</div>
+        <div class="history-time">${timeAgo}</div>
+        <div class="history-status">${icon}</div>
+      </div>
+    `;
+  }).join('');
+  
+  document.getElementById('historyList').innerHTML = historyHTML;
+}
+
+function getTimeAgo(timestamp) {
+  const seconds = Math.floor((Date.now() - timestamp) / 1000);
+  
+  if (seconds < 60) return 'Just now';
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+  return `${Math.floor(seconds / 86400)}d ago`;
+}
+
+function clearHistory() {
+  if (confirm('Clear all check history?')) {
+    checkHistory = [];
+    localStorage.removeItem('checkHistory');
+    renderHistory();
+  }
+}
+
+// Initial render
+renderHistory();
+</script>
+</body>
+</html>
