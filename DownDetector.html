@@ -135,7 +135,7 @@
   }
   
   input:checked + .toggle-slider:before {
-    transform: translateX(24px);
+    transform: translateX(23px);
   }
   
   .proxy-input {
@@ -646,6 +646,22 @@ function saveProxySettings() {
   authHeaderName = document.getElementById('authHeaderName').value.trim();
   authHeaderValue = document.getElementById('authHeaderValue').value.trim();
   
+  // Validate header name - HTTP header names can only contain certain characters
+  // RFC 7230: token characters are alphanumeric plus !#$%&'*+-.^_`|~
+  if (authHeaderName) {
+    const validHeaderPattern = /^[A-Za-z0-9!#$%&'*+\-.^_`|~]+$/;
+    if (!validHeaderPattern.test(authHeaderName)) {
+      alert('Invalid auth header name. Use only alphanumeric characters and: !#$%&\'*+-.^_`|~');
+      return;
+    }
+  }
+  
+  // Clean the auth value - remove any potential problematic characters
+  // This will strip newlines, carriage returns, etc.
+  if (authHeaderValue) {
+    authHeaderValue = authHeaderValue.replace(/[\r\n\t]/g, '');
+  }
+  
   localStorage.setItem('proxyUrl', proxyUrl);
   localStorage.setItem('authHeaderName', authHeaderName);
   localStorage.setItem('authHeaderValue', authHeaderValue);
@@ -740,7 +756,20 @@ async function checkViaProxy(input) {
     
     // Add auth header if configured
     if (authHeaderName && authHeaderValue) {
-      headers[authHeaderName] = authHeaderValue;
+      // Clean the values to remove any potential whitespace or special characters
+      const cleanHeaderName = authHeaderName.trim();
+      const cleanHeaderValue = authHeaderValue.trim();
+      
+      // Validate header name (must be valid HTTP header name)
+      if (cleanHeaderName && cleanHeaderValue) {
+        try {
+          headers[cleanHeaderName] = cleanHeaderValue;
+        } catch (headerError) {
+          console.error('Error setting header:', headerError);
+          showProxyError(input, url, `Invalid header: ${headerError.message}`, 0);
+          return;
+        }
+      }
     }
     
     const res = await fetch(proxyRequest, {
@@ -776,9 +805,14 @@ async function checkViaProxy(input) {
     
   } catch (e) {
     const responseTime = Math.round(performance.now() - start);
+    console.error('Fetch error:', e);
+    
     if (e.name === "AbortError") {
       showTimeout(input, url);
       addToHistory(input, 'timeout', responseTime, null);
+    } else if (e.message && e.message.includes('pattern')) {
+      showProxyError(input, url, 'Invalid characters in request. Check proxy URL and auth credentials.', responseTime);
+      addToHistory(input, 'error', responseTime, null);
     } else {
       showError(input, url, e.message);
       addToHistory(input, 'error', responseTime, null);
