@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZerdgeCerts Certificate Authority</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg-primary: #0a0e27;
+      --bg-secondary: #151937;
+      --bg-card: #1a1f3a;
+      --text-primary: #ffffff;
+      --text-secondary: #a0aec0;
+      --accent: #10b981;
+      --accent-hover: #34d399;
+      --accent-glow: rgba(16, 185, 129, 0.4);
+      --border: rgba(255, 255, 255, 0.1);
+      --shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      --warning: #f59e0b;
+      --info: #3b82f6;
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg-primary: #f8fafc;
+        --bg-secondary: #ffffff;
+        --bg-card: #ffffff;
+        --text-primary: #1e293b;
+        --text-secondary: #64748b;
+        --accent: #059669;
+        --accent-hover: #047857;
+        --accent-glow: rgba(5, 150, 105, 0.2);
+        --border: rgba(0, 0, 0, 0.08);
+        --shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+        --warning: #d97706;
+        --info: #2563eb;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+      padding: 3rem 0;
+    }
+
+    .logo {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      filter: drop-shadow(0 4px 20px var(--accent-glow));
+    }
+
+    h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, var(--accent) 0%, #10b981 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .tagline {
+      font-size: 1.2rem;
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1.5rem;
+      background: var(--bg-card);
+      border: 2px solid var(--accent);
+      border-radius: 50px;
+      color: var(--accent);
+      font-weight: 600;
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.2); }
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+
+    .stat-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent);
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .section {
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: 20px;
+      padding: 2.5rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow);
+    }
+
+    .section h2 {
+      font-size: 1.8rem;
+      margin-bottom: 1.5rem;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .section h3 {
+      font-size: 1.3rem;
+      margin: 2rem 0 1rem;
+      color: var(--text-primary);
+    }
+
+    .section p {
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+    }
+
+    .feature-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .feature-list li {
+      padding: 0.75rem 0;
+      padding-left: 2rem;
+      position: relative;
+      color: var(--text-secondary);
+    }
+
+    .feature-list li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 1.2rem;
+    }
+
+    .code-block {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+      position: relative;
+    }
+
+    .code-block code {
+      color: var(--text-secondary);
+      display: block;
+      white-space: pre;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .copy-btn:hover {
+      background: var(--accent-hover);
+      transform: translateY(-2px);
+    }
+
+    .copy-btn.copied {
+      background: var(--accent-hover);
+    }
+
+    .download-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--accent);
+      color: white;
+      text-decoration: none;
+      padding: 1rem 2rem;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 1.1rem;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 20px var(--accent-glow);
+    }
+
+    .download-btn:hover {
+      background: var(--accent-hover);
+      transform: translateY(-4px);
+      box-shadow: 0 8px 30px var(--accent-glow);
+    }
+
+    .warning-box {
+      background: rgba(245, 158, 11, 0.1);
+      border: 2px solid var(--warning);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+    }
+
+    .warning-box h4 {
+      color: var(--warning);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .info-box {
+      background: rgba(59, 130, 246, 0.1);
+      border: 2px solid var(--info);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+    }
+
+    .info-box h4 {
+      color: var(--info);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .use-case-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin: 1.5rem 0;
+    }
+
+    .use-case-card {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+
+    .use-case-card h4 {
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin: 1.5rem 0;
+    }
+
+    footer {
+      text-align: center;
+      padding: 3rem 0;
+      color: var(--text-secondary);
+      border-top: 1px solid var(--border);
+      margin-top: 3rem;
+    }
+
+    @media (max-width: 768px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .section {
+        padding: 1.5rem;
+      }
+
+      .button-group {
+        flex-direction: column;
+      }
+
+      .download-btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">🔐</div>
+      <h1>ZerdgeCerts Certificate Authority</h1>
+      <p class="tagline">Free, Long-Lived Certificates for Internal Infrastructure</p>
+      <div class="status-badge">
+        <span class="status-dot"></span>
+        Operational & Issuing
+      </div>
+    </header>
+
+    <div class="hero-grid">
+      <div class="stat-card">
+        <div class="stat-icon">📅</div>
+        <span class="stat-value">2126</span>
+        <div class="stat-label">Valid Until</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">🔄</div>
+        <span class="stat-value">CRL</span>
+        <div class="stat-label">Revocation Support</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">🌐</div>
+        <span class="stat-value">IP + Domain</span>
+        <div class="stat-label">Certificate Types</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">⚡</div>
+        <span class="stat-value">Remote</span>
+        <div class="stat-label">Issuance & Revocation</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>🎯 What is ZerdgeCerts?</h2>
+      <p>ZerdgeCerts is a private Certificate Authority designed for internal infrastructure, development environments, and scenarios where public CAs like Let's Encrypt cannot be used.</p>
+      
+      <div class="info-box">
+        <h4>ℹ️ Key Features</h4>
+        <ul class="feature-list">
+          <li>100+ year validity period (expires 2126)</li>
+          <li>Public CRL endpoint for real-time revocation checking</li>
+          <li>Support for both domain names and IP addresses</li>
+          <li>Remote certificate issuance and revocation</li>
+          <li>Perfect for homelabs, private networks, and IoT devices</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>📥 Download Root Certificate</h2>
+      <p>To trust certificates issued by ZerdgeCerts, you need to install the root certificate on your devices.</p>
+      
+      <div class="button-group">
+        <a href="https://iamcheese-man.github.io/Certificates/rootCA/ZerdgeCertsCA.crt" class="download-btn">
+          🔑 Download Root Certificate
+        </a>
+      </div>
+
+      <div class="info-box">
+        <h4>📋 Certificate Information</h4>
+        <div class="code-block">
+          <code>Common Name: ZerdgeCerts Root CA
+Issuer: Self-Signed
+Valid From: February 14, 2026
+Valid Until: January 21, 2126
+CRL Distribution Point: https://iamcheese-man.github.io/Certificates/CertRevokeList
+
+SHA-256 Fingerprint:
+fa 8b 46 fa 03 a8 1d 02 56 1e a2 b9 b5 24 59 9c 91 db 01 93 c5 36 4b 79 ca c1 1c c9 d1 6e e5 ab</code>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>🔄 Certificate Revocation List (CRL)</h2>
+      <p>ZerdgeCerts maintains a public CRL endpoint for real-time certificate revocation checking. This ensures that revoked certificates are no longer trusted.</p>
+
+      <h3>CRL Endpoint</h3>
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyToClipboard('https://github.com/iamcheese-man/Certificates/blob/main/CertRevokeList/crl.json', this)">Copy</button>
+        <code>https://github.com/iamcheese-man/Certificates/blob/main/CertRevokeList/crl.json</code>
+      </div>
+
+      <h3>Check Certificate Status</h3>
+      <p>To verify if a certificate has been revoked, download the CRL and check against the certificate serial number:</p>
+      
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyToClipboard('curl -O https://iamcheese-man.github.io/Certificates/CertRevokeList/crl.json\nopenssl crl -in crl.pem -noout -text', this)">Copy</button>
+        <code># Download the CRL
+curl -O https://iamcheese-man.github.io/Certificates/CertRevokeList/crl.json
+
+# View CRL contents
+openssl crl -in crl.pem -noout -text
+
+# Check specific certificate
+openssl verify -crl_check -CAfile root.crt -CRLfile crl.pem cert.pem</code>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>💻 Installation Instructions</h2>
+      
+      <h3>Windows</h3>
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyToClipboard('certutil -addstore -f Root ZerdgeCertsCA.crt', this)">Copy</button>
+        <code># Run as Administrator
+certutil -addstore -f "Root" ZerdgeCertsCA.crt</code>
+      </div>
+
+      <h3>macOS</h3>
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyToClipboard('sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain ZerdgeCertsCA.crt', this)">Copy</button>
+        <code># Install to system keychain
+sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain ZerdgeCertsCA.crt</code>
+      </div>
+
+      <h3>Linux (Ubuntu/Debian)</h3>
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyToClipboard('sudo cp ZerdgeCertsCA.crt /usr/local/share/ca-certificates/\nsudo update-ca-certificates', this)">Copy</button>
+        <code># Copy to certificates directory
+sudo cp ZerdgeCertsCA.crt /usr/local/share/ca-certificates/
+
+# Update certificate store
+sudo update-ca-certificates</code>
+      </div>
+
+      <h3>Firefox (All Platforms)</h3>
+      <p>Firefox uses its own certificate store:</p>
+      <ol style="color: var(--text-secondary); padding-left: 1.5rem; margin: 1rem 0;">
+        <li>Open Firefox → Settings → Privacy & Security</li>
+        <li>Scroll to "Certificates" → Click "View Certificates"</li>
+        <li>Go to "Authorities" tab → Click "Import"</li>
+        <li>Select ZerdgeCertsCA.crt</li>
+        <li>Check "Trust this CA to identify websites"</li>
+      </ol>
+    </div>
+
+    <div class="section">
+      <h2>✅ Use Cases</h2>
+      <p>ZerdgeCerts is ideal for scenarios where public certificate authorities cannot be used:</p>
+
+      <div class="use-case-grid">
+        <div class="use-case-card">
+          <h4>🏠 Homelab Infrastructure</h4>
+          <p>Secure your internal services without the complexity of Let's Encrypt DNS challenges.</p>
+        </div>
+
+        <div class="use-case-card">
+          <h4>📱 IoT Devices</h4>
+          <p>Issue certificates for devices with IP addresses that public CAs won't sign.</p>
+        </div>
+
+        <div class="use-case-card">
+          <h4>🔒 Private Networks</h4>
+          <p>Secure air-gapped or offline networks where external validation is impossible.</p>
+        </div>
+
+        <div class="use-case-card">
+          <h4>👨‍💻 Development Environments</h4>
+          <p>Test TLS configurations with realistic certificates in local environments.</p>
+        </div>
+
+        <div class="use-case-card">
+          <h4>🏢 Internal Corporate Services</h4>
+          <p>Better than self-signed certificates for internal web applications.</p>
+        </div>
+
+        <div class="use-case-card">
+          <h4>🎓 Educational Projects</h4>
+          <p>Learn PKI concepts with a real working certificate authority.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>⚠️ Important Limitations</h2>
+      
+      <div class="warning-box">
+        <h4>⚠️ Not for Public Websites</h4>
+        <p>ZerdgeCerts is NOT trusted by default in browsers or operating systems. It is designed for internal use only. For public-facing websites, use Let's Encrypt or a commercial CA.</p>
+      </div>
+
+      <div class="warning-box">
+        <h4>⚠️ Manual Trust Required</h4>
+        <p>Users must manually install the root certificate on each device. This makes it unsuitable for public services where you cannot control client devices.</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>🤝 Request a Certificate</h2>
+      <p>Need a certificate issued by ZerdgeCerts? Certificate issuance requires proof of ownership to prevent mis-issuance.</p>
+      
+      <div class="warning-box">
+        <h4>⚠️ Verification Required</h4>
+        <p><strong>You must prove ownership of the domain or IP address before a certificate will be issued.</strong> This ensures certificates are only issued to legitimate owners and prevents abuse.</p>
+      </div>
+
+      <h3>📋 How to Request</h3>
+      <div class="info-box">
+        <h4>📧 Contact Information</h4>
+        <p>To request a certificate or report security issues:</p>
+        <ul class="feature-list">
+          <li>GitHub: <a href="https://github.com/iamcheese-man" style="color: var(--accent);">@iamcheese-man</a></li>
+          <li>Issues: <a href="https://github.com/iamcheese-man/HTML/issues" style="color: var(--accent);">GitHub Issues</a></li>
+        </ul>
+      </div>
+
+      <h3>📝 Required Information</h3>
+      <p>Include the following in your certificate request:</p>
+      <ul class="feature-list">
+        <li>Domain name(s) or IP address(es)</li>
+        <li>Certificate purpose (homelab, development, etc.)</li>
+        <li>Desired validity period</li>
+        <li>Subject Alternative Names (SANs) if needed</li>
+      </ul>
+
+      <h3>✅ Ownership Verification Methods</h3>
+      <p>You will be asked to prove ownership using one of these methods:</p>
+
+      <div class="use-case-grid">
+        <div class="use-case-card">
+          <h4>🌐 DNS TXT Record</h4>
+          <p>Add a specific TXT record to your domain's DNS. This proves you control the domain's DNS settings.</p>
+          <div class="code-block" style="margin-top: 1rem; font-size: 0.8rem;">
+            <code>_zerdgecerts-challenge.example.com
+TXT "verification-token-12345"</code>
+          </div>
+        </div>
+
+        <div class="use-case-card">
+          <h4>📄 HTTP File Challenge</h4>
+          <p>Host a specific file at a well-known URL on your web server to prove control.</p>
+          <div class="code-block" style="margin-top: 1rem; font-size: 0.8rem;">
+            <code>http://example.com/.well-known/
+zerdgecerts-challenge.txt</code>
+          </div>
+        </div>
+
+        <div class="use-case-card">
+          <h4>📧 Email Verification</h4>
+          <p>Receive a verification code at admin@, postmaster@, or webmaster@ for your domain.</p>
+          <div class="code-block" style="margin-top: 1rem; font-size: 0.8rem;">
+            <code>admin@example.com
+postmaster@example.com
+webmaster@example.com</code>
+          </div>
+        </div>
+
+        <div class="use-case-card">
+          <h4>🔌 IP Address Verification</h4>
+          <p>For IP-based certificates, run a temporary service on a specific port to prove control.</p>
+          <div class="code-block" style="margin-top: 1rem; font-size: 0.8rem;">
+            <code># Listen on specified port
+nc -l 192.168.1.100 8443</code>
+          </div>
+        </div>
+
+        <div class="use-case-card">
+          <h4>🔐 Certificate Signing Request</h4>
+          <p>Submit a CSR proving you control the private key for the requested certificate.</p>
+          <div class="code-block" style="margin-top: 1rem; font-size: 0.8rem;">
+            <code>openssl req -new -key private.key
+-out request.csr</code>
+          </div>
+        </div>
+
+        <div class="use-case-card">
+          <h4>📸 Screenshot/Documentation</h4>
+          <p>For internal IPs or special cases, provide evidence of infrastructure ownership (router admin, etc.).</p>
+        </div>
+      </div>
+
+      <div class="info-box" style="margin-top: 1.5rem;">
+        <h4>⏱️ Processing Time</h4>
+        <p>Once ownership is verified, certificates are typically issued within 24-48 hours. Verification must be completed before issuance.</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>🔐 Security & Transparency</h2>
+      
+      <h3>Root Key Security</h3>
+      <p>Information about how the root private key is stored and protected.</p>
+
+      <h3>Issuance Policy</h3>
+      <ul class="feature-list">
+        <li><strong>Ownership verification required</strong> - All certificate requests must prove domain/IP control</li>
+        <li>Certificates issued on verified request basis only</li>
+        <li>Manual verification and approval of all requests</li>
+        <li>Rate limiting to prevent abuse</li>
+        <li>Revocation available upon request or security incident</li>
+        <li>No wildcard certificates without additional verification</li>
+      </ul>
+
+      <h3>What We Won't Issue</h3>
+      <ul class="feature-list">
+        <li>Certificates for domains you don't own or control</li>
+        <li>Certificates impersonating known services or brands</li>
+        <li>Certificates for malicious purposes</li>
+        <li>Certificates without completed verification</li>
+      </ul>
+
+      <h3>Incident Response</h3>
+      <p>If you discover a mis-issued certificate or security issue, please report it immediately through GitHub issues or email. Compromised or mis-issued certificates will be revoked within 24 hours of verification.</p>
+    </div>
+
+    <footer>
+      <p><strong>ZerdgeCerts Certificate Authority</strong></p>
+      <p>© 2025 iamcheese-man | <a href="https://github.com/iamcheese-man/HTML" style="color: var(--accent);">GitHub Repository</a></p>
+      <p style="margin-top: 1rem; font-size: 0.85rem;">This is a private CA for internal use. Not affiliated with any commercial certificate authority.</p>
+    </footer>
+  </div>
+
+  <script>
+    function copyToClipboard(text, button) {
+      navigator.clipboard.writeText(text).then(() => {
+        const originalText = button.textContent;
+        button.textContent = '✓ Copied!';
+        button.classList.add('copied');
+        
+        setTimeout(() => {
+          button.textContent = originalText;
+          button.classList.remove('copied');
+        }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>
