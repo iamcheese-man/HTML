@@ -1,182 +1,834 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="Sites Homepage" />
-<link rel="apple-touch-icon" href="icon.png" />
   <meta charset="UTF-8" />
-  <title>My Sites</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
-
-  <!-- Favicon and Web App Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="My Projects" />
+  <title>My Projects | iamcheese-man</title>
+  
+  <!-- Favicons -->
   <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="shortcut icon" href="/favicon.ico" />
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-  <meta name="apple-mobile-web-app-title" content="My Sites" />
   <link rel="manifest" href="/site.webmanifest" />
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
   <style>
     :root {
-      --bg: #f0f2f5;
-      --text: #1a1a1a;
-      --card-bg: #fff;
-      --accent: #007bff;
-      --card-hover: #f5f8ff;
-      --shadow: 0 8px 24px rgba(0,0,0,0.1);
+      --bg-primary: #0a0e27;
+      --bg-secondary: #151937;
+      --bg-card: #1a1f3a;
+      --text-primary: #ffffff;
+      --text-secondary: #a0aec0;
+      --accent: #6366f1;
+      --accent-hover: #818cf8;
+      --accent-glow: rgba(99, 102, 241, 0.4);
+      --border: rgba(255, 255, 255, 0.1);
+      --shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      --card-hover: #222847;
     }
 
-    @media (prefers-color-scheme: dark) {
+    @media (prefers-color-scheme: light) {
       :root {
-        --bg: #111;
-        --text: #e5e5e5;
-        --card-bg: #1d1d1d;
-        --accent: #4dabf7;
-        --card-hover: #222;
+        --bg-primary: #f8fafc;
+        --bg-secondary: #ffffff;
+        --bg-card: #ffffff;
+        --text-primary: #1e293b;
+        --text-secondary: #64748b;
+        --accent: #6366f1;
+        --accent-hover: #4f46e5;
+        --accent-glow: rgba(99, 102, 241, 0.2);
+        --border: rgba(0, 0, 0, 0.08);
+        --shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+        --card-hover: #f8fafc;
       }
     }
 
     * {
       box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
     body {
-      margin: 0;
-      padding: 2rem;
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Inter', sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* Animated Background */
+    .bg-decoration {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .bg-decoration::before,
+    .bg-decoration::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.15;
+      animation: float 20s infinite ease-in-out;
+    }
+
+    .bg-decoration::before {
+      width: 600px;
+      height: 600px;
+      background: var(--accent);
+      top: -200px;
+      left: -200px;
+    }
+
+    .bg-decoration::after {
+      width: 500px;
+      height: 500px;
+      background: #8b5cf6;
+      bottom: -150px;
+      right: -150px;
+      animation-delay: -10s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(50px, -50px) scale(1.1); }
+      66% { transform: translate(-50px, 50px) scale(0.9); }
+    }
+
+    /* Container */
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+      animation: fadeInDown 0.8s ease-out;
     }
 
     h1 {
-      font-size: 2.4rem;
-      margin-bottom: 2rem;
-      background: linear-gradient(90deg, var(--accent), #00d4ff);
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, var(--accent) 0%, #8b5cf6 50%, #ec4899 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      animation: shine 6s infinite linear;
+      background-clip: text;
+      animation: gradientShift 8s ease infinite;
+      background-size: 200% 200%;
     }
 
-    @keyframes shine {
-      0% { filter: brightness(1); }
-      50% { filter: brightness(1.5); }
-      100% { filter: brightness(1); }
+    @keyframes gradientShift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
     }
 
-    .site-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1.2rem;
+    .subtitle {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+    }
+
+    /* Search Bar */
+    .search-container {
+      max-width: 600px;
+      margin: 0 auto 3rem;
+      position: relative;
+      animation: fadeIn 1s ease-out 0.3s backwards;
+    }
+
+    .search-input {
       width: 100%;
-      max-width: 1000px;
-    }
-
-    .site-card {
-      background: var(--card-bg);
-      padding: 1.2rem 1.5rem;
+      padding: 1rem 3rem 1rem 3rem;
+      background: var(--bg-card);
+      border: 2px solid var(--border);
       border-radius: 16px;
-      text-align: center;
-      transition: transform 0.25s ease, background 0.3s ease;
+      color: var(--text-primary);
+      font-size: 1rem;
+      font-family: inherit;
+      transition: all 0.3s ease;
       box-shadow: var(--shadow);
-      border: 1px solid transparent;
     }
 
-    .site-card:hover {
-      background: var(--card-hover);
-      transform: translateY(-6px);
+    .search-input:focus {
+      outline: none;
       border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-glow), var(--shadow);
     }
 
-    .site-card a {
-      text-decoration: none;
-      color: var(--accent);
+    .search-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
       font-size: 1.2rem;
+      color: var(--text-secondary);
+      pointer-events: none;
+    }
+
+    .clear-search {
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 1.5rem;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      padding: 0.25rem;
+    }
+
+    .clear-search.visible {
+      opacity: 1;
+    }
+
+    .clear-search:hover {
+      color: var(--accent);
+    }
+
+    /* Category Filter */
+    .category-filter {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      justify-content: center;
+      margin-bottom: 2.5rem;
+      animation: fadeIn 1s ease-out 0.4s backwards;
+    }
+
+    .category-btn {
+      padding: 0.6rem 1.2rem;
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: inherit;
+    }
+
+    .category-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .category-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    /* Stats Bar */
+    .stats-bar {
+      display: flex;
+      gap: 1.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 2.5rem;
+      animation: fadeIn 1s ease-out 0.5s backwards;
+    }
+
+    .stat-item {
+      background: var(--bg-card);
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+      text-align: center;
+      min-width: 120px;
+    }
+
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--accent);
+      display: block;
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-top: 0.25rem;
+    }
+
+    /* Grid */
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+      animation: fadeIn 1s ease-out 0.6s backwards;
+    }
+
+    /* Cards */
+    .project-card {
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: 20px;
+      padding: 1.8rem;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .project-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, var(--accent-glow) 0%, transparent 100%);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    .project-card:hover {
+      transform: translateY(-8px) scale(1.02);
+      border-color: var(--accent);
+      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3), 0 0 40px var(--accent-glow);
+    }
+
+    .project-card:hover::before {
+      opacity: 1;
+    }
+
+    .card-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .project-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      display: block;
+      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+    }
+
+    .project-title {
+      font-size: 1.15rem;
       font-weight: 600;
-      display: inline-block;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
       transition: color 0.3s ease;
     }
 
-    .site-card a:hover {
-      color: #00d4ff;
+    .project-card:hover .project-title {
+      color: var(--accent);
     }
 
+    .project-category {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      background: var(--border);
+      border-radius: 6px;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      margin-top: 0.5rem;
+    }
+
+    .project-link {
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+
+    /* No Results */
+    .no-results {
+      text-align: center;
+      padding: 4rem 2rem;
+      display: none;
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    .no-results.visible {
+      display: block;
+    }
+
+    .no-results-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    .no-results-text {
+      font-size: 1.2rem;
+      color: var(--text-secondary);
+    }
+
+    /* Footer */
     footer {
-      margin-top: 3rem;
-      font-size: 0.85rem;
-      color: #999;
+      text-align: center;
+      margin-top: 4rem;
+      padding: 2rem 0;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .footer-links a:hover {
+      color: var(--accent);
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container {
+        padding: 1.5rem 1rem;
+      }
+
+      .projects-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1rem;
+      }
+
+      .stats-bar {
+        gap: 1rem;
+      }
+
+      .stat-item {
+        min-width: 100px;
+        padding: 0.75rem 1rem;
+      }
+
+      .category-filter {
+        gap: 0.5rem;
+      }
+
+      .category-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+      }
+    }
+
+    /* Scroll behavior */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* Selection color */
+    ::selection {
+      background: var(--accent);
+      color: white;
     }
   </style>
 </head>
 <body>
-  <h1>✨ Explore My Projects</h1>
+  <div class="bg-decoration"></div>
+  
+  <div class="container">
+    <header>
+      <h1>✨ My Projects</h1>
+      <p class="subtitle">A collection of interactive tools and games</p>
+    </header>
 
-  <div class="site-grid">
-    <div class="site-card">
-      <a href="https://iamcheese-man.github.io/HTML/tetris.html">🎮 Play Tetris</a>
+    <!-- Search Bar -->
+    <div class="search-container">
+      <span class="search-icon">🔍</span>
+      <input 
+        type="text" 
+        class="search-input" 
+        id="searchInput" 
+        placeholder="Search projects..."
+        autocomplete="off"
+      />
+      <button class="clear-search" id="clearSearch" aria-label="Clear search">×</button>
     </div>
-    <div class="site-card">
-      <a href="https://iamcheese-man.github.io/HTML/MemoryGame.html">🧠 Memory Game</a>
+
+    <!-- Category Filter -->
+    <div class="category-filter" id="categoryFilter">
+      <button class="category-btn active" data-category="all">All Projects</button>
+      <button class="category-btn" data-category="games">🎮 Games</button>
+      <button class="category-btn" data-category="tools">🛠️ Tools</button>
+      <button class="category-btn" data-category="network">🌐 Network</button>
+      <button class="category-btn" data-category="dev">⚙️ Developer</button>
     </div>
-    <div class="site-card">
-      <a href="https://iamcheese-man.github.io/HTML/Minesweeper.html">💣 Minesweeper</a>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+      <div class="stat-item">
+        <span class="stat-value" id="totalCount">16</span>
+        <span class="stat-label">Total Projects</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value" id="visibleCount">16</span>
+        <span class="stat-label">Showing</span>
+      </div>
     </div>
-    <div class="site-card">
-      <a href="https://iamcheese-man.github.io/HTML/devicefeature.html">📱 Device Feature Tester</a>
+
+    <!-- Projects Grid -->
+    <div class="projects-grid" id="projectsGrid">
+      <!-- Games -->
+      <a href="https://iamcheese-man.github.io/HTML/tetris.html" class="project-link" data-category="games">
+        <div class="project-card">
+          <div class="card-content">
+            <span class="project-icon">🎮</span>
+            <h3 class="project-title">Play Tetris</h3>
+            <span class="project-category">Game</span>
+          </div>
+        </div>
+      </a>
+
+      <a href="https://iamcheese-man.github.io/HTML/MemoryGame.html" class="project-link" data-category="games">
+        <div class="project-card">
+          <div class="card-content">
+            <span class="project-icon">🧠</span>
+            <h3 class="project-title">Memory Game</h3>
+            <span class="project-category">Game</span>
+          </div>
+        </div>
+      </a>
+
+      <a href="https://iamcheese-man.github.io/HTML/Minesweeper.html" class="project-link" data-category="games">
+        <div class="project-card">
+          <div class="card-content">
+            <span class="project-icon">💣</span>
+            <h3 class="project-title">Minesweeper</h3>
+            <span class="project-category">Game</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- Tools -->
+      <a href="https://iamcheese-man.github.io/HTML/devicefeature.html" class="project-link" data-category="tools">
+        <div class="project-card">
+          <div class="card-content">
+            <span class="project-icon">📱</span>
+            <h3 class="project-title">Device Feature Tester</h3>
+            <span class="project-category">Tool</span>
+          </div>
+        </div>
+      </a>
+
+      <a href="https://iamcheese-man.github.io/HTML/ISSTracker.html" class="project-link" data-category="tools">
+        <div class="project-card">
+          <div class="card-content">
+            <span class="project-icon">🛰️</span>
+            <h3 class="project-title">ISS Live Tracker</h3>
+            <span class="project-category">Tool</span>
+          </div>
+        </div>
+      </a>
+
+      <a href="https://iamcheese-man.github.io/HTML/DataConvert.html" class="project-link" data-category="tools">
+        <div class="project-card">
+          <div class="card-content">
+            <span class="project-icon">💿</span>
+            <h3 class="project-title">Data Converter</h3>
+            <span class="project-category">Tool</span>
+          </div>
+        </div>
+      </a>
+
+      <a href="https://iamcheese-man.github.io/HTML/PasswordGen.html" class="project-link" data-category="tools">
+        <div class="project-card">
+          <div class="card-content">
+            <span class="project-icon">🔐</span>
+            <h3 class="project-title">Password Generator</h3>
+            <span class="project-category">Tool</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- Network Tools -->
+      <a href="https://iamcheese-man.github.io/HTML/HttpRequesting.html" class="project-link" data-category="network">
+        <div class="project-card">
+          <div class="card-content">
+            <span class="project-icon">🛜</span>
+            <h3 class="project-title">HTTP Requesting</h3>
+            <span class="project-category">Network</span>
+          </div>
+        </div>
+      </a>
+
+      <a href="https://iamcheese-man.github.io/HTML/WebSocketTesting.html" class="project-link" data-category="network">
+        <div class="project-card">
+          <div class="card-content">
+            <span class="project-icon">🕸️</span>
+            <h3 class="project-title">WebSocket Tester</h3>
+            <span class="project-category">Network</span>
+          </div>
+        </div>
+      </a>
+
+      <a href="https://iamcheese-man.github.io/HTML/DnsLookup.html" class="project-link" data-category="network">
+        <div class="project-card">
+          <div class="card-content">
+            <span class="project-icon">🔎</span>
+            <h3 class="project-title">DNS Lookup Tool</h3>
+            <span class="project-category">Network</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- Communication -->
+      <a href="https://iamcheese-man.github.io/HTML/ChatSystem.html" class="project-link" data-category="tools">
+        <div class="project-card">
+          <div class="card-content">
+            <span class="project-icon">💬</span>
+            <h3 class="project-title">Chat System</h3>
+            <span class="project-category">Tool</span>
+          </div>
+        </div>
+      </a>
+
+      <a href="https://iamcheese-man.github.io/HTML/VideoSystem.html" class="project-link" data-category="tools">
+        <div class="project-card">
+          <div class="card-content">
+            <span class="project-icon">📹</span>
+            <h3 class="project-title">Video System</h3>
+            <span class="project-category">Tool</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- Developer Tools -->
+      <a href="https://iamcheese-man.github.io/HTML/JWTTool.html" class="project-link" data-category="dev">
+        <div class="project-card">
+          <div class="card-content">
+            <span class="project-icon">🔨</span>
+            <h3 class="project-title">JWT Tool</h3>
+            <span class="project-category">Developer</span>
+          </div>
+        </div>
+      </a>
+
+      <a href="https://iamcheese-man.github.io/HTML/BJSScriptManager.html" class="project-link" data-category="dev">
+        <div class="project-card">
+          <div class="card-content">
+            <span class="project-icon">📝</span>
+            <h3 class="project-title">Browser JS Script Manager</h3>
+            <span class="project-category">Developer</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- Links -->
+      <a href="https://github.com/iamcheese-man/HTML" class="project-link" data-category="dev">
+        <div class="project-card">
+          <div class="card-content">
+            <span class="project-icon">⚙️</span>
+            <h3 class="project-title">GitHub Repository</h3>
+            <span class="project-category">Developer</span>
+          </div>
+        </div>
+      </a>
+
+      <a href="https://iamcheese-man.github.io/Certificates/rootCA/ZerdgeCertsCA.crt" class="project-link" data-category="dev">
+        <div class="project-card">
+          <div class="card-content">
+            <span class="project-icon">🔑</span>
+            <h3 class="project-title">Root Certificate</h3>
+            <span class="project-category">Security</span>
+          </div>
+        </div>
+      </a>
     </div>
-    <div class="site-card">
-      <a href="https://iamcheese-man.github.io/HTML/ISSTracker.html">🛰️ ISS Live Tracker</a>
+
+    <!-- No Results Message -->
+    <div class="no-results" id="noResults">
+      <div class="no-results-icon">🔍</div>
+      <div class="no-results-text">No projects found matching your search</div>
     </div>
-    <div class="site-card">
-      <a href="https://iamcheese-man.github.io/HTML/ChatSystem.html">💬 Chat System</a>
-    </div>
-    <div class="site-card">
-      <a href="https://iamcheese-man.github.io/HTML/VideoSystem.html">📹 Video System</a>
-    </div>
-    <div class="site-card">
-      <a href="https://iamcheese-man.github.io/HTML/DataConvert.html">💿 Data Converter</a>
-    </div>
-    <div class="site-card">
-      <a href="https://iamcheese-man.github.io/HTML/HttpRequesting.html">🛜 HTTP Requesting</a>
-    </div>
-    <div class="site-card">
-      <a href="https://iamcheese-man.github.io/HTML/WebSocketTesting.html">🕸️ WebSocket Tester</a>
-    </div>
-    <div class="site-card">
-      <a href="https://iamcheese-man.github.io/HTML/JWTTool.html">🔨 JWT Tool</a>
-    </div>
-    <div class="site-card">
-      <a href="https://iamcheese-man.github.io/HTML/BJSScriptManager.html">📝 Browser JS Script Manager</a>
-    </div>
-    <div class="site-card">
-      <a href="https://iamcheese-man.github.io/HTML/PasswordGen.html">🔐Password Generator</a>
-    </div>
-    <div class="site-card">
-      <a href="https://iamcheese-man.github.io/HTML/DnsLookup.html">🔎DNS Lookup Tool</a>
-    </div>
-    <div class="site-card">
-      <a href="https://github.com/iamcheese-man/HTML">⚙️ My Repository</a>
-    </div>
-    <div class="site-card">
-      <a href="https://iamcheese-man.github.io/Certificates/rootCA/ZerdgeCertsCA.crt">🔑My Root Certificate</a>
-    </div>
+
+    <!-- Footer -->
+    <footer>
+      <div class="footer-links">
+        <a href="https://github.com/iamcheese-man" target="_blank">GitHub</a>
+        <a href="https://github.com/iamcheese-man/HTML" target="_blank">Repository</a>
+      </div>
+      <p>© 2025 iamcheese-man | Made with ❤️</p>
+    </footer>
   </div>
 
-  <footer>© 2025 iamcheese-man</footer>
-  <h2 id="siteCount" style="margin: 2rem 0 1rem; font-size: 1.5rem;"></h2>
+  <script>
+    // Get DOM elements
+    const searchInput = document.getElementById('searchInput');
+    const clearSearch = document.getElementById('clearSearch');
+    const projectsGrid = document.getElementById('projectsGrid');
+    const noResults = document.getElementById('noResults');
+    const categoryBtns = document.querySelectorAll('.category-btn');
+    const projectLinks = document.querySelectorAll('.project-link');
+    const visibleCount = document.getElementById('visibleCount');
+    const totalCount = document.getElementById('totalCount');
 
-<script>
-  window.addEventListener("DOMContentLoaded", () => {
-    const cards = document.querySelectorAll(".site-card");
-    const extra = 0; 
-    const total = cards.length + extra;
-    const counter = document.getElementById("siteCount");
-    counter.textContent = `📦 Total Sites: ${total}`;
-  });
-</script>
+    let activeCategory = 'all';
+
+    // Update counts
+    function updateCounts() {
+      const total = projectLinks.length;
+      const visible = Array.from(projectLinks).filter(link => 
+        link.style.display !== 'none'
+      ).length;
+      
+      totalCount.textContent = total;
+      visibleCount.textContent = visible;
+      
+      if (visible === 0) {
+        noResults.classList.add('visible');
+        projectsGrid.style.display = 'none';
+      } else {
+        noResults.classList.remove('visible');
+        projectsGrid.style.display = 'grid';
+      }
+    }
+
+    // Filter projects
+    function filterProjects() {
+      const searchTerm = searchInput.value.toLowerCase().trim();
+      
+      projectLinks.forEach(link => {
+        const title = link.querySelector('.project-title').textContent.toLowerCase();
+        const category = link.getAttribute('data-category');
+        
+        const matchesSearch = title.includes(searchTerm);
+        const matchesCategory = activeCategory === 'all' || category === activeCategory;
+        
+        if (matchesSearch && matchesCategory) {
+          link.style.display = 'block';
+          // Stagger animation
+          setTimeout(() => {
+            link.style.opacity = '1';
+            link.style.transform = 'translateY(0)';
+          }, 10);
+        } else {
+          link.style.display = 'none';
+        }
+      });
+      
+      updateCounts();
+      
+      // Show/hide clear button
+      if (searchTerm) {
+        clearSearch.classList.add('visible');
+      } else {
+        clearSearch.classList.remove('visible');
+      }
+    }
+
+    // Search functionality
+    searchInput.addEventListener('input', filterProjects);
+
+    // Clear search
+    clearSearch.addEventListener('click', () => {
+      searchInput.value = '';
+      searchInput.focus();
+      filterProjects();
+    });
+
+    // Category filter
+    categoryBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Update active state
+        categoryBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        // Update active category
+        activeCategory = btn.getAttribute('data-category');
+        
+        // Filter projects
+        filterProjects();
+      });
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      // Focus search on '/' key
+      if (e.key === '/' && document.activeElement !== searchInput) {
+        e.preventDefault();
+        searchInput.focus();
+      }
+      
+      // Clear search on 'Escape' key
+      if (e.key === 'Escape' && document.activeElement === searchInput) {
+        searchInput.value = '';
+        searchInput.blur();
+        filterProjects();
+      }
+    });
+
+    // Add stagger animation on load
+    projectLinks.forEach((link, index) => {
+      link.style.opacity = '0';
+      link.style.transform = 'translateY(20px)';
+      link.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+      
+      setTimeout(() => {
+        link.style.opacity = '1';
+        link.style.transform = 'translateY(0)';
+      }, 100 * index);
+    });
+
+    // Initialize counts
+    updateCounts();
+
+    // Add loading animation
+    window.addEventListener('load', () => {
+      document.body.style.opacity = '1';
+    });
+  </script>
 </body>
 </html>
