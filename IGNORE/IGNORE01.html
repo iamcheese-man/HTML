@@ -14,7 +14,6 @@
     --surface: #111118;
     --border: #1e1e2e;
     --accent: #6ee7f7;
-    --accent2: #a78bfa;
     --text: #e8e8f0;
     --muted: #5a5a7a;
     --glow: rgba(110,231,247,0.15);
@@ -61,7 +60,7 @@
   .container {
     position: relative;
     z-index: 1;
-    height: 100vh;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -93,9 +92,7 @@
     letter-spacing: -0.02em;
   }
 
-  .header h1 span {
-    color: var(--accent);
-  }
+  .header h1 span { color: var(--accent); }
 
   .cards {
     display: flex;
@@ -120,9 +117,6 @@
     transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
     animation: fadeUp 0.6s ease both;
   }
-
-  .card:nth-child(1) { animation-delay: 0.15s; }
-  .card:nth-child(2) { animation-delay: 0.28s; }
 
   .card::before {
     content: '';
@@ -152,15 +146,7 @@
 
   .card:hover::before { opacity: 1; }
   .card:hover::after  { opacity: 1; }
-
-  .card:active {
-    transform: translateY(0px) scale(0.98);
-  }
-
-  .card:nth-child(2) {
-    --accent: #a78bfa;
-    --glow: rgba(167,139,250,0.12);
-  }
+  .card:active { transform: translateY(0px) scale(0.98); }
 
   .icon {
     position: relative;
@@ -177,19 +163,9 @@
     transition: background 0.2s, border-color 0.2s;
   }
 
-  .card:nth-child(2) .icon {
-    background: rgba(167,139,250,0.08);
-    border-color: rgba(167,139,250,0.2);
-  }
-
   .card:hover .icon {
     background: rgba(110,231,247,0.15);
     border-color: rgba(110,231,247,0.4);
-  }
-
-  .card:nth-child(2):hover .icon {
-    background: rgba(167,139,250,0.15);
-    border-color: rgba(167,139,250,0.4);
   }
 
   .icon svg {
@@ -236,6 +212,13 @@
     transform: translateX(3px);
   }
 
+  .status {
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    animation: fadeUp 0.6s ease both;
+  }
+
   .footer {
     font-size: 0.6rem;
     color: var(--muted);
@@ -263,38 +246,78 @@
     <h1>Please choose an<br>app to <span>install</span></h1>
   </div>
 
-  <div class="cards">
-
-    <a class="card" href="itms-services://?action=download-manifest&url=https://iamcheese-man.github.io/IPA-Distribution/iOSCrackmeOTA.plist">
-      <div class="icon">
-        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 1a11 11 0 1 0 11 11A11 11 0 0 0 12 1Zm0 20a9 9 0 1 1 9-9 9 9 0 0 1-9 9Zm1-13h-2v5.414l3.293 3.293 1.414-1.414L13 12.586Z"/>
-        </svg>
-      </div>
-      <div class="info">
-        <span class="name">Crackme</span>
-        <span class="sub">iOS · Tap to install</span>
-      </div>
-      <span class="arrow">→</span>
-    </a>
-
-    <a class="card" href="itms-services://?action=download-manifest&url=https://iamcheese-man.github.io/IPA-Distribution/iOSExampleAppOTA.plist">
-      <div class="icon">
-        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Zm0 16H5V5h14ZM7 7h10v2H7Zm0 4h10v2H7Zm0 4h7v2H7Z"/>
-        </svg>
-      </div>
-      <div class="info">
-        <span class="name">Example App</span>
-        <span class="sub">iOS · Tap to install</span>
-      </div>
-      <span class="arrow">→</span>
-    </a>
-
+  <div class="cards" id="cards">
+    <div class="status" id="status">Fetching apps...</div>
   </div>
 
   <div class="footer">Open on iOS · Requires trust via Settings</div>
 
 </div>
+
+<script>
+  const GITHUB_API = 'https://api.github.com/repos/iamcheese-man/IPA-Distribution/contents/';
+  const BASE_URL   = 'https://iamcheese-man.github.io/IPA-Distribution/';
+
+  const IPA_ICON = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Zm0 16H5V5h14ZM7 7h10v2H7Zm0 4h10v2H7Zm0 4h7v2H7Z"/>
+  </svg>`;
+
+  function makeName(filename) {
+    return filename
+      .replace(/\.ipa$/i, '')
+      .replace(/[_-]/g, ' ')
+      .replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  function makeCard(filename, index) {
+    const plistName = filename.replace(/\.ipa$/i, '.plist');
+    const plistUrl  = BASE_URL + plistName;
+    const itmsUrl   = 'itms-services://?action=download-manifest&url=' + encodeURIComponent(plistUrl);
+    const name      = makeName(filename);
+
+    const a = document.createElement('a');
+    a.className = 'card';
+    a.href = itmsUrl;
+    a.style.animationDelay = (0.1 + index * 0.12) + 's';
+    a.innerHTML = `
+      <div class="icon">${IPA_ICON}</div>
+      <div class="info">
+        <span class="name">${name}</span>
+        <span class="sub">iOS · Tap to install</span>
+      </div>
+      <span class="arrow">→</span>
+    `;
+    return a;
+  }
+
+  async function fetchApps() {
+    const status = document.getElementById('status');
+    const cards  = document.getElementById('cards');
+
+    try {
+      const res  = await fetch(GITHUB_API);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const files = await res.json();
+
+      const ipas = files
+        .filter(f => f.type === 'file' && f.name.toLowerCase().endsWith('.ipa'))
+        .map(f => f.name);
+
+      status.remove();
+
+      if (ipas.length === 0) {
+        cards.innerHTML = '<div class="status">No IPA files found.</div>';
+        return;
+      }
+
+      ipas.forEach((name, i) => cards.appendChild(makeCard(name, i)));
+
+    } catch (err) {
+      status.textContent = 'Failed to load: ' + err.message;
+    }
+  }
+
+  fetchApps();
+</script>
 </body>
 </html>
