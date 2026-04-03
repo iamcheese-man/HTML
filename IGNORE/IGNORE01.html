@@ -1,15 +1,300 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Install iOS Crackme</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script>
-    // Immediately redirect to OTA manifest
-    window.location.href = "itms-services://?action=download-manifest&url=https://iamcheese-man.github.io/IPA-Distribution/iOSCrackmeOTA.plist";
-  </script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Install App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --border: #1e1e2e;
+    --accent: #6ee7f7;
+    --accent2: #a78bfa;
+    --text: #e8e8f0;
+    --muted: #5a5a7a;
+    --glow: rgba(110,231,247,0.15);
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    overflow: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.5;
+    animation: gridPan 20s linear infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  @keyframes gridPan {
+    0%   { background-position: 0 0; }
+    100% { background-position: 40px 40px; }
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 500px 400px at 20% 30%, rgba(110,231,247,0.06) 0%, transparent 70%),
+      radial-gradient(ellipse 400px 500px at 80% 70%, rgba(167,139,250,0.07) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    gap: 3rem;
+  }
+
+  .header {
+    text-align: center;
+    animation: fadeDown 0.6s ease both;
+  }
+
+  .header .label {
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+    display: block;
+  }
+
+  .header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.6rem, 5vw, 2.6rem);
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--text);
+    letter-spacing: -0.02em;
+  }
+
+  .header h1 span {
+    color: var(--accent);
+  }
+
+  .cards {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 1.25rem 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    text-decoration: none;
+    color: var(--text);
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .card:nth-child(1) { animation-delay: 0.15s; }
+  .card:nth-child(2) { animation-delay: 0.28s; }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--glow);
+    opacity: 0;
+    transition: opacity 0.3s;
+    border-radius: inherit;
+  }
+
+  .card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 0 24px rgba(110,231,247,0.12), 0 8px 32px rgba(0,0,0,0.4);
+  }
+
+  .card:hover::before { opacity: 1; }
+  .card:hover::after  { opacity: 1; }
+
+  .card:active {
+    transform: translateY(0px) scale(0.98);
+  }
+
+  .card:nth-child(2) {
+    --accent: #a78bfa;
+    --glow: rgba(167,139,250,0.12);
+  }
+
+  .icon {
+    position: relative;
+    z-index: 1;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: rgba(110,231,247,0.08);
+    border: 1px solid rgba(110,231,247,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.2s, border-color 0.2s;
+  }
+
+  .card:nth-child(2) .icon {
+    background: rgba(167,139,250,0.08);
+    border-color: rgba(167,139,250,0.2);
+  }
+
+  .card:hover .icon {
+    background: rgba(110,231,247,0.15);
+    border-color: rgba(110,231,247,0.4);
+  }
+
+  .card:nth-child(2):hover .icon {
+    background: rgba(167,139,250,0.15);
+    border-color: rgba(167,139,250,0.4);
+  }
+
+  .icon svg {
+    width: 20px;
+    height: 20px;
+    fill: var(--accent);
+  }
+
+  .info {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .info .name {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text);
+    display: block;
+    margin-bottom: 0.2rem;
+  }
+
+  .info .sub {
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .arrow {
+    position: relative;
+    z-index: 1;
+    color: var(--muted);
+    font-size: 1.1rem;
+    transition: color 0.2s, transform 0.2s;
+    flex-shrink: 0;
+  }
+
+  .card:hover .arrow {
+    color: var(--accent);
+    transform: translateX(3px);
+  }
+
+  .footer {
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    animation: fadeUp 0.6s 0.45s ease both;
+  }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
 </head>
 <body>
-  <p>If you are not redirected automatically, <a href="itms-services://?action=download-manifest&url=https://iamcheese-man.github.io/IPA-Distribution/iOSCrackmeOTA.plist">tap here to install</a>.</p>
+<div class="container">
+
+  <div class="header">
+    <span class="label">OTA Distribution</span>
+    <h1>Please choose an<br>app to <span>install</span></h1>
+  </div>
+
+  <div class="cards">
+
+    <a class="card" href="itms-services://?action=download-manifest&url=https://iamcheese-man.github.io/IPA-Distribution/iOSCrackmeOTA.plist">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 1a11 11 0 1 0 11 11A11 11 0 0 0 12 1Zm0 20a9 9 0 1 1 9-9 9 9 0 0 1-9 9Zm1-13h-2v5.414l3.293 3.293 1.414-1.414L13 12.586Z"/>
+        </svg>
+      </div>
+      <div class="info">
+        <span class="name">Crackme</span>
+        <span class="sub">iOS · Tap to install</span>
+      </div>
+      <span class="arrow">→</span>
+    </a>
+
+    <a class="card" href="itms-services://?action=download-manifest&url=https://iamcheese-man.github.io/IPA-Distribution/iOSExampleAppOTA.plist">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Zm0 16H5V5h14ZM7 7h10v2H7Zm0 4h10v2H7Zm0 4h7v2H7Z"/>
+        </svg>
+      </div>
+      <div class="info">
+        <span class="name">Example App</span>
+        <span class="sub">iOS · Tap to install</span>
+      </div>
+      <span class="arrow">→</span>
+    </a>
+
+  </div>
+
+  <div class="footer">Open on iOS · Requires trust via Settings</div>
+
+</div>
 </body>
 </html>
